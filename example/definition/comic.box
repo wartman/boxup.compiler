@@ -1,0 +1,50 @@
+[definition comic]
+
+[root]
+  [child comic] 
+    required = true
+    multiple = false
+  [child paragraph]
+  [child page]
+
+[block comic]
+  [property title] 
+    required = true
+  [property author]
+    required = true
+  [property version]
+    type = Int
+  [property date]
+    type = Date
+  [property firstPageNumber]
+    type = Int
+
+[block page]
+  [child panel]
+  [child notes]
+
+[block notes]
+  [id]
+  [child paragraph]
+  [child list]
+
+[block panel]
+  [id]
+    type = Int
+    required = true
+  [child dialog]
+    alias = @
+  [child paragraph]
+  [child notes]
+
+[block dialog]
+  [id]
+    required = true
+  [property modifier]
+  [child paragraph]
+  [child cont]
+
+[block cont]
+
+[block paragraph]
+  type = Paragraph

@@ -1,0 +1,15 @@
+-cp src
+-cp test
+
+-lib hxnodejs
+
+-dce full
+
+-D js-es=6
+-D js-source-map
+-D analyzer-optimize
+-D debug
+
+-main Test
+
+-js dist/test.js
