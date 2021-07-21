@@ -3,7 +3,6 @@ package boxup.definition;
 import boxup.definition.Definition.ValueType;
 import boxup.definition.Definition.BlockDefinitionType;
 import boxup.Builtin;
-import haxe.ds.Option;
 
 class DefinitionValidator implements Validator {
   static final definition = new Definition('d', [
@@ -113,7 +112,7 @@ class DefinitionValidator implements Validator {
 
   public function new() {}
 
-  public function validate(nodes:Array<Node>):Option<Error> {
+  public function validate(nodes:Array<Node>):Result<Array<Node>> {
     return definition.validate(nodes);
   }
 }

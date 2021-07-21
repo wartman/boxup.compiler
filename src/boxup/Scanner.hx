@@ -1,6 +1,14 @@
 package boxup;
 
 class Scanner {
+  public static function scan(source):Result<Array<Token>> {
+    return try {
+      Ok(new Scanner(source).scanSource());
+    } catch (e:Error) {
+      Fail(e);
+    }
+  }
+
   final source:Source;
   var position:Int = 0;
   var start:Int = 0;
@@ -9,20 +17,21 @@ class Scanner {
     this.source = source;
   }
 
-  public function scan() {
+  public function scanSource():Array<Token> {
     position = 0;
     start = 0;
-    var out = [ while (!isAtEnd()) scanToken() ];
-    out.push({
-      type: TokEof,
-      value: '',
-      pos: {
-        min: position,
-        max: position,
-        file: source.file
+
+    return [ while (!isAtEnd()) scanToken() ].concat([
+      {
+        type: TokEof,
+        value: '',
+        pos: {
+          min: position,
+          max: position,
+          file: source.file
+        }
       }
-    });
-    return out;
+    ]);
   }
 
   function scanToken():Token {

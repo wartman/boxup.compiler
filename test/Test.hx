@@ -1,4 +1,3 @@
-import haxe.Json;
 import boxup.generator.NullGenerator;
 import boxup.definition.DefinitionGenerator;
 import boxup.definition.DefinitionValidator;
@@ -37,16 +36,17 @@ function main() {
   [child paragraph]
 '
   };
-  var reporter = new VisualReporter(str -> trace(str));
+  var reporter = new VisualReporter();
   var compiler = new Compiler(
-    reporter,
     new DefinitionGenerator(),
-    new DefinitionValidator()
+    new DefinitionValidator(),
+    reporter
   );
-  switch compiler.compile(source) {
-    case Some(def):
-      var compiler = new Compiler(reporter, new NullGenerator(), def);
-      switch compiler.compile({
+  compiler
+    .compile(source)
+    .map(def -> {
+      var compiler = new Compiler(new NullGenerator(), def, reporter);
+      var source:Source = {
         file: 'foo.box',
         content: '
 YAMS and stuff.
@@ -58,10 +58,16 @@ How is things?
   
   And this <works>[link https://www.foo.bar] too!
 '
-      }) {
-        case Some(nodes): trace(Json.stringify(nodes, '  '));
-        default: trace('error encountered');
-      }
-    case None: trace('Error encountered');
-  }
+      };
+
+      compiler.compile(source);
+    })
+    .handleError(_ -> {
+      Sys.println('Compile failed');
+      Sys.exit(1);
+    })
+    .handleValue(_ -> {
+      Sys.print('Compile succeeded');
+      Sys.exit(0);
+    });
 }

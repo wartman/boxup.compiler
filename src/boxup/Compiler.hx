@@ -1,33 +1,28 @@
 package boxup;
 
-import haxe.ds.Option;
+import boxup.reporter.NullReporter;
+import boxup.validator.NullValidator;
 
 class Compiler<T> {
-  final reporter:Reporter;
   final generator:Generator<T>;
-  final validator:Null<Validator>;
+  final validator:Validator;
+  final reporter:Reporter;
 
-  public function new(reporter, generator, ?validator) {
-    this.reporter = reporter;
+  public function new(generator, ?validator, ?reporter) {
     this.generator = generator;
-    this.validator = validator;
+    this.validator = validator == null 
+      ? new NullValidator()
+      : validator;
+    this.reporter = reporter == null
+      ? new NullReporter()
+      : reporter;
   }
 
-  public function compile(source:Source):Option<T> {
-    return try {
-      var scanner = new Scanner(source);
-      var parser = new Parser(scanner.scan());
-      var nodes = parser.parse();
-      if (validator != null) switch validator.validate(nodes) {
-        case Some(error):
-          reporter.report(error, source);
-          None;
-        case None:
-          Some(generator.generate(nodes));
-      } else Some(generator.generate(nodes));
-    } catch (e:Error) {
-      reporter.report(e, source);
-      None;
-    }
+  public function compile(source:Source):Result<T> {
+    return Scanner.scan(source)
+      .map(Parser.parse)
+      .map(validator.validate)
+      .map(generator.generate)
+      .handleError(e -> reporter.report(e, source));
   }
 }

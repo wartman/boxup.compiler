@@ -5,8 +5,12 @@ using StringTools;
 class VisualReporter implements Reporter {
   final print:(str:String)->Void;
 
-  public function new(print) {
-    this.print = print;
+  public function new(?print) {
+    #if (sys || hxnodejs)
+      this.print = print == null ? Sys.println : print;
+    #else
+      this.print = print == null ? str -> trace(str) : print;
+    #end
   }
 
   public function report(e:Error, source:Source) {
@@ -39,6 +43,7 @@ class VisualReporter implements Reporter {
     var textLines = text.split('\n');
     var start = 0;
     
+    print('');
     print('ERROR: ${pos.file}:${line} [${pos.min} ${pos.max}]');
     for (t in textLines) {
       print(formatNumber(line++) + t);
@@ -46,6 +51,7 @@ class VisualReporter implements Reporter {
       start = t.length;
     }
     print(formatSpacer() + repeat(arrows.substr(0, start).length - 1) + e.message);
+    print('');
   }
 
   function formatNumber(lineNumber:Int) {

@@ -4,6 +4,14 @@ using StringTools;
 using boxup.TokenTools;
 
 class Parser {
+  public static function parse(tokens):Result<Array<Node>> {
+    return try {
+      Ok(new Parser(tokens).parseTokens());
+    } catch (e:Error) {
+      Fail(e);
+    }
+  }
+
   final tokens:Array<Token>;
   var position:Int = 0;
   
@@ -11,7 +19,7 @@ class Parser {
     this.tokens = tokens;
   }
 
-  public function parse() {
+  public function parseTokens():Array<Node> {
     position = 0;
     return [ while (!isAtEnd()) parseRoot(0) ].filter(n -> n != null);
   }
@@ -42,7 +50,6 @@ class Parser {
     }
 
     if (!isWhitespace(peek())) {
-      ignoreWhitespace();
       if (!check(TokCloseBracket)) {
         throw error('Expected a `${TokenType.TokCloseBracket}` or a block ID', peek().pos);
       }

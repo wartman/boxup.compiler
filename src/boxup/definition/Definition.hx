@@ -25,7 +25,7 @@ class Definition implements Validator {
     return meta.exists(name) ? meta.get(name) : def;
   }
 
-  public function validate(nodes:Array<Node>):Option<Error> {
+  public function validate(nodes:Array<Node>):Result<Array<Node>> {
     var file = nodes.length > 0
       ? nodes[0].pos.file
       : '<unknown>';
@@ -34,7 +34,7 @@ class Definition implements Validator {
       type: Block(BRoot, false),
       children: nodes,
       pos: { min: 0, max: 0, file: file }
-    }, this);
+    }, this).map(_ -> Ok(nodes));
   }
 }
 
@@ -65,23 +65,23 @@ class BlockDefinition {
     return meta.exists(name) ? meta.get(name) : def;
   }
 
-  public function validate(node:Node, definition:Definition):Option<Error> {
+  public function validate(node:Node, definition:Definition):Result<Node> {
     var existingChildren:Array<String> = [];
     var existingProps:Array<String> = [];
 
-    function validateChild(type:String, isTag:Bool, child:Node):Option<Error> {
+    function validateChild(type:String, isTag:Bool, child:Node):Result<Node> {
       if (!children.exists(c -> c.name == type)) {
-        return Some(new Error('The block ${type} is an invalid child for ${name}', child.pos));
+        return Fail(new Error('The block ${type} is an invalid child for ${name}', child.pos));
       }
       var childDef = children.find(c -> c.name == type);
       var blockDef = definition.getBlock(type);
 
       if (childDef == null) {
-        return Some(new Error('Child not allowed: ${type}', child.pos));
+        return Fail(new Error('Child not allowed: ${type}', child.pos));
       } else if (blockDef == null) {
-        return Some(new Error('Unknown block type: ${type}', child.pos));
+        return Fail(new Error('Unknown block type: ${type}', child.pos));
       } else if (existingChildren.contains(type) && childDef.multiple == false) {
-        return Some(new Error('Only one ${type} is allowed in ${name}', child.pos));
+        return Fail(new Error('Only one ${type} is allowed in ${name}', child.pos));
       }
 
       existingChildren.push(type);
@@ -89,17 +89,17 @@ class BlockDefinition {
       return blockDef.validate(child, definition);
     }
 
-    function validateProp(prop:Node):Option<Error> {
+    function validateProp(prop:Node):Result<Node> {
       var propDef = properties.find(p -> p.name == prop.id);
       
       if (propDef == null) switch type {
         case BPropertyBag:
         default:
-          return Some(new Error('Invalid property ${prop.id}', prop.pos));
+          return Fail(new Error('Invalid property ${prop.id}', prop.pos));
       }
 
       if (existingProps.contains(propDef.name)) {
-        return Some(new Error('Duplicate property', prop.pos));
+        return Fail(new Error('Duplicate property', prop.pos));
       }
 
       existingProps.push(propDef.name);
@@ -109,22 +109,22 @@ class BlockDefinition {
 
     if (id != null) {
       if (node.id == null && id.required) {
-        return Some(new Error('${name} requires an id', node.pos));
+        return Fail(new Error('${name} requires an id', node.pos));
       }
       if (node.id != null) switch id.validate(node.id, node.pos) {
-        case Some(error): return Some(error);
-        case None:
+        case Fail(error): return Fail(error);
+        case Ok(_):
       }
     }
 
     for (child in node.children) switch child.type {
       case Block(type, isTag): switch validateChild(type, isTag, child) {
-        case Some(error): return Some(error);
-        case None:
+        case Fail(error): return Fail(error);
+        case Ok(_):
       }
       case Property: switch validateProp(child) {
-        case Some(error): return Some(error);
-        case None:
+        case Fail(error): return Fail(error);
+        case Ok(_):
       }
       case Paragraph:
         var para:BlockDefinition = null;
@@ -136,30 +136,30 @@ class BlockDefinition {
           }
         }
         if (para == null) {
-          return Some(new Error('No Paragraphs are allowed here', child.pos));
+          return Fail(new Error('No Paragraphs are allowed here', child.pos));
         } else switch validateChild(para.name, para.isTag, child) {
-          case Some(error): return Some(error);
-          case None:
+          case Fail(error): return Fail(error);
+          case Ok(_):
         }
       case Text if (!isTag && !isParagraph):
-        return Some(new Error('Invalid child', child.pos));
+        return Fail(new Error('Invalid child', child.pos));
       case Text:
         // ?
     }
     
     for (def in properties) {
       if (def.required && !existingChildren.contains(def.name)) {
-        return Some(new Error('Requires property ${def.name}', node.pos));
+        return Fail(new Error('Requires property ${def.name}', node.pos));
       }
     }
 
     for (child in children) {
       if (child.required && !existingChildren.contains(child.name)) {
-        return Some(new Error('Requires a ${child.name} block', node.pos));
+        return Fail(new Error('Requires a ${child.name} block', node.pos));
       }
     }
 
-    return None;
+    return Ok(node);
   }
 }
 
@@ -171,24 +171,24 @@ enum abstract ValueType(String) to String from String {
   final VBool = 'Bool';
 }
 
-private function checkType(value:String, type:ValueType, pos:Position):Option<Error> {
+private function checkType(value:String, type:ValueType, pos:Position):Result<String> {
   return switch type {
     case VBool: switch value {
-      case 'true' | 'false': None;
-      default: Some(new Error('Expected a Bool', pos));
+      case 'true' | 'false': Ok(value);
+      default: Fail(new Error('Expected a Bool', pos));
     }
-    case VString | VAny: None;
+    case VString | VAny: Ok(value);
     case VInt: try { 
       @:keep Std.parseInt(value);
-      None; 
+      Ok(value); 
     } catch (e) {
-      Some(new Error('Expected an Int', pos));
+      Fail(new Error('Expected an Int', pos));
     }
     case VFloat: try { 
       @:keep Std.parseFloat(value);
-      None; 
+      Ok(value); 
     } catch (e) {
-      Some(new Error('Expected an Float', pos));
+      Fail(new Error('Expected an Float', pos));
     }
   }
 }
@@ -218,8 +218,7 @@ class PropertyDefinition {
   public final type:ValueType = VString;
   public final allowedValues:Array<String> = [];
 
-  public function validate(prop:Node):Option<Error> {
-    var pos = prop.pos;
+  public function validate(prop:Node):Result<Node> {
     var child = prop.children.find(p -> switch p.type {
       case Text: true;
       default: false;
@@ -230,10 +229,11 @@ class PropertyDefinition {
 
     if (allowedValues.length > 0) {
       if (!allowedValues.contains(value)) {
-        return Some(new Error('Must be one of ${allowedValues.join(', ')}', child.pos));
+        return Fail(new Error('Must be one of ${allowedValues.join(', ')}', child.pos));
       }
     }
 
-    return checkType(value, type, child.pos);
+    return checkType(value, type, child.pos)
+      .map(_ -> Ok(prop));
   }
 }

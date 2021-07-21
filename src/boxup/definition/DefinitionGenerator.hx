@@ -31,7 +31,7 @@ class DefinitionGenerator implements Generator<Definition> {
 
   public function new() {}
 
-  public function generate(nodes:Array<Node>):Definition {
+  public function generate(nodes:Array<Node>):Result<Definition> {
     var blocks:Array<BlockDefinition> = [].concat(defaultBlocks);
     var meta:Map<String, String> = [];
     var id:DefinitionId = switch nodes[0].pos.file.withoutDirectory().split('.') {
@@ -79,7 +79,7 @@ class DefinitionGenerator implements Generator<Definition> {
       default:
     }
 
-    return new Definition(id, blocks, meta);
+    return Ok(new Definition(id, blocks, meta));
   }
 
   function generateProperties(node:Node) {
