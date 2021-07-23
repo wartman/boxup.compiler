@@ -6,6 +6,10 @@ Simple, structured markup.
 About
 -----
 
+> Note: this is a rework of [the original Boxup](https://github.com/wartman/boxup), a project that quickly got out of scope and became far too complex. This refactor aims to keep things simpler.
+
+Boxup is a markup language, designed for situations where Markdown doesn't provide enough structure but where something like XML would be too cumbersome. In addition, it has schemas built in to its compiler.
+
 ```boxup
 [/ Comments look like this! /]
 
@@ -29,9 +33,9 @@ About
 ```
 
 ```boxup
-[/ A possible definition file for the above: /]
+[/ A possible schema for the above: /]
 
-[defintion example]
+[schema example]
 
 [root]
   [child article]
@@ -64,7 +68,3 @@ About
   [id]
     required = true
 ```
-
-> Note: this is a rework of [the original Boxup](https://github.com/wartman/boxup), a project that quickly got out of scope and became far too complex. This refactor aims to keep things simpler.
-
-Boxup is a markup language, designed for situations where Markdown doesn't provide enough structure but where something like XML would be too cumbersome. In addition, it can use definition files that enforce types.

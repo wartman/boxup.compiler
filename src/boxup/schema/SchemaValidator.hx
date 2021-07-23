@@ -1,22 +1,21 @@
-package boxup.definition;
+package boxup.schema;
 
-import boxup.definition.Definition.ValueType;
-import boxup.definition.Definition.BlockDefinitionType;
+import boxup.schema.Schema;
 import boxup.Builtin;
 
-class DefinitionValidator implements Validator {
-  static final definition = new Definition('d', [
+class SchemaValidator implements Validator {
+  static final schema = new Schema('d', [
     {
       name: BRoot,
       children: [
-        { name: 'definition', required: true, multiple: false },
+        { name: 'schema', required: true, multiple: false },
         { name: 'root', required: true, multiple: false },
         { name: 'block' }
       ]
     },
 
     {
-      name: 'definition',
+      name: 'schema',
       id: { required: false },
       children: [
         { name: 'import' },
@@ -113,6 +112,6 @@ class DefinitionValidator implements Validator {
   public function new() {}
 
   public function validate(nodes:Array<Node>):Result<Array<Node>> {
-    return definition.validate(nodes);
+    return schema.validate(nodes);
   }
 }

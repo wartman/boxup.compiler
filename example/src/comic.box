@@ -1,4 +1,4 @@
-[use definition.comic]
+[use schema.comic]
 
 [comic]
   [/ Comments should work here! /]
@@ -21,10 +21,7 @@
       [cont]
       Kind of *scary*.
 
-    [/ We can use special characters -- like `@` -- instead of having
-       to write [dialog Bob Bobstine]
-    /]
-    [@ Bob Bobstine]
+    [dialog Bob Bobstine]
       You got that right, friend.
     
   [panel 3]

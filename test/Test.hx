@@ -1,6 +1,6 @@
 import boxup.generator.NullGenerator;
-import boxup.definition.DefinitionGenerator;
-import boxup.definition.DefinitionValidator;
+import boxup.schema.SchemaGenerator;
+import boxup.schema.SchemaValidator;
 import boxup.reporter.VisualReporter;
 import boxup.Compiler;
 import boxup.Source;
@@ -9,7 +9,7 @@ function main() {
   var source:Source = {
     file: 'test.box',
     content: '
-[definition test]
+[schema test]
 
 [root]
   [child paragraph]
@@ -28,7 +28,6 @@ function main() {
   [id]
     required = true
 
-
 [block tester]
   [property foo]
     [option bar]
@@ -38,8 +37,8 @@ function main() {
   };
   var reporter = new VisualReporter();
   var compiler = new Compiler(
-    new DefinitionGenerator(),
-    new DefinitionValidator(),
+    new SchemaGenerator(),
+    new SchemaValidator(),
     reporter
   );
   compiler
@@ -50,7 +49,7 @@ function main() {
         file: 'foo.box',
         content: '
 YAMS and stuff.
-[header foo]
+[header foo bar bin]
 How is things?
 
 [tester]

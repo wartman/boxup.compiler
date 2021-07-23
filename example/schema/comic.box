@@ -1,4 +1,4 @@
-[definition comic]
+[schema comic]
 
 [root]
   [child comic] 

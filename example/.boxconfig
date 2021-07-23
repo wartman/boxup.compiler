@@ -1,0 +1,16 @@
+[use std.boxconfig]
+
+[config]
+  schemaSource = schema
+
+[task html]
+  source = src
+  destination = dist/html
+  generator = html  
+  filter = comic
+
+[task md]
+  source = src
+  destination = dist/md
+  generator = md  
+  filter = comic

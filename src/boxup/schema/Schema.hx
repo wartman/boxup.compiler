@@ -1,13 +1,12 @@
-package boxup.definition;
+package boxup.schema;
 
-import haxe.ds.Option;
 import haxe.ds.Map;
 import boxup.Builtin;
 
 using Lambda;
 
-class Definition implements Validator {
-  public final id:DefinitionId;
+class Schema implements Validator {
+  public final id:SchemaId;
   final blocks:Array<BlockDefinition>;
   final meta:Map<String, String>;
 
@@ -65,7 +64,7 @@ class BlockDefinition {
     return meta.exists(name) ? meta.get(name) : def;
   }
 
-  public function validate(node:Node, definition:Definition):Result<Node> {
+  public function validate(node:Node, schema:Schema):Result<Node> {
     var existingChildren:Array<String> = [];
     var existingProps:Array<String> = [];
 
@@ -74,7 +73,7 @@ class BlockDefinition {
         return Fail(new Error('The block ${type} is an invalid child for ${name}', child.pos));
       }
       var childDef = children.find(c -> c.name == type);
-      var blockDef = definition.getBlock(type);
+      var blockDef = schema.getBlock(type);
 
       if (childDef == null) {
         return Fail(new Error('Child not allowed: ${type}', child.pos));
@@ -86,7 +85,7 @@ class BlockDefinition {
 
       existingChildren.push(type);
 
-      return blockDef.validate(child, definition);
+      return blockDef.validate(child, schema);
     }
 
     function validateProp(prop:Node):Result<Node> {
@@ -129,7 +128,7 @@ class BlockDefinition {
       case Paragraph:
         var para:BlockDefinition = null;
         for (def in children) {
-          var b = definition.getBlock(def.name);
+          var b = schema.getBlock(def.name);
           if (b.isParagraph) {
             para = b;
             break;

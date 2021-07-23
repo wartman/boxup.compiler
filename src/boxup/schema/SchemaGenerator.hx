@@ -1,13 +1,13 @@
-package boxup.definition;
+package boxup.schema;
 
 import haxe.ds.Map;
 import boxup.Builtin;
-import boxup.definition.Definition;
+import boxup.schema.Schema;
 
 using Lambda;
 using haxe.io.Path;
 
-class DefinitionGenerator implements Generator<Definition> {
+class SchemaGenerator implements Generator<Schema> {
   static final defaultParagraphChildren:Array<ChildDefinition> = [
     { name: BItalic },
     { name: BBold },
@@ -31,16 +31,16 @@ class DefinitionGenerator implements Generator<Definition> {
 
   public function new() {}
 
-  public function generate(nodes:Array<Node>):Result<Definition> {
+  public function generate(nodes:Array<Node>):Result<Schema> {
     var blocks:Array<BlockDefinition> = [].concat(defaultBlocks);
     var meta:Map<String, String> = [];
-    var id:DefinitionId = switch nodes[0].pos.file.withoutDirectory().split('.') {
+    var id:SchemaId = switch nodes[0].pos.file.withoutDirectory().split('.') {
       case [name, 'd', 'box'] | [name, 'box']: name;
       default: '<unknown>';
     }
 
     for (node in nodes) switch node.type {
-      case Block('definition', false):
+      case Block('schema', false):
         if (node.id != null) id = node.id;
         var metas = node.children.filter(c -> c.type.equals(Block('meta', false)));
         for (m in metas) {
@@ -79,7 +79,7 @@ class DefinitionGenerator implements Generator<Definition> {
       default:
     }
 
-    return Ok(new Definition(id, blocks, meta));
+    return Ok(new Schema(id, blocks, meta));
   }
 
   function generateProperties(node:Node) {
