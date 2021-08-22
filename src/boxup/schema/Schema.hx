@@ -116,7 +116,7 @@ class BlockDefinition {
       }
 
       if (existingProps.contains(propDef.name)) {
-        return Fail(new Error('Duplicate property', prop.pos));
+        return Fail(new Error('Duplicate property ${propDef.name}', prop.pos));
       }
 
       existingProps.push(propDef.name);
@@ -169,7 +169,7 @@ class BlockDefinition {
     }
     
     for (def in properties) {
-      if (def.required && !existingChildren.contains(def.name)) {
+      if (def.required && !existingProps.contains(def.name)) {
         return Fail(new Error('Requires property ${def.name}', node.pos));
       }
     }

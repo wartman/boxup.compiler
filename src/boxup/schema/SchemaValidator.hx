@@ -74,7 +74,7 @@ class SchemaValidator implements Validator {
       id: { required: true },
       properties: [
         { name: 'required', type: VBool, required: false },
-        { name: 'multile', type: VBool, def: 'false', required: false }
+        { name: 'multiple', type: VBool, def: 'false', required: false }
       ]
     },
 
