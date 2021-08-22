@@ -24,6 +24,24 @@ class Schema implements Validator {
     return meta.exists(name) ? meta.get(name) : def;
   }
 
+  public function merge(other:Schema) {
+    var root = getBlock(BRoot);
+    var otherRoot = other.getBlock(BRoot);
+
+    for (child in otherRoot.children) {
+      if (!root.children.exists(c -> c.name == child.name)) {
+        root.children.push(child);
+      }
+    }
+
+    for (block in other.blocks) switch block.name {
+      case BRoot: // noop
+      case name if (getBlock(name) == null): 
+        blocks.push(block);
+      default:
+    }
+  }
+
   public function validate(nodes:Array<Node>):Result<Array<Node>> {
     var file = nodes.length > 0
       ? nodes[0].pos.file
@@ -191,7 +209,7 @@ private function checkType(value:String, type:ValueType, pos:Position):Result<St
       @:keep Std.parseFloat(value);
       Ok(value); 
     } catch (e) {
-      Fail(new Error('Expected an Float', pos));
+      Fail(new Error('Expected a Float', pos));
     }
   }
 }
