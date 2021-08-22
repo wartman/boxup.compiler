@@ -16,6 +16,11 @@ class SchemaGenerator implements Generator<Schema> {
 
   static final defaultBlocks:Array<BlockDefinition> = [
     {
+      name: Keyword.KUse,
+      type: BNormal,
+      id: { required: true }
+    },
+    {
       name: BItalic,
       type: BTag
     },
@@ -35,7 +40,7 @@ class SchemaGenerator implements Generator<Schema> {
     var blocks:Array<BlockDefinition> = [].concat(defaultBlocks);
     var meta:Map<String, String> = [];
     var id:SchemaId = switch nodes[0].pos.file.withoutDirectory().split('.') {
-      case [name, 'd', 'box'] | [name, 'box']: name;
+      case [name, 'box']: name;
       default: '<unknown>';
     }
 
@@ -54,6 +59,14 @@ class SchemaGenerator implements Generator<Schema> {
         blocks.push({
           name: BRoot,
           children: generateChildren(node)
+            .concat([
+              // Ensure we have a `[use $schema]` block always
+              // available in the root.
+              {
+                name: Keyword.KUse,
+                multiple: false
+              }
+            ])
         });
       case Block('block', false):
         var type:BlockDefinitionType = node.getProperty('type', BlockDefinitionType.BNormal);

@@ -114,6 +114,10 @@ class BlockDefinition {
         case Fail(error): return Fail(error);
         case Ok(_):
       }
+    } else {
+      if (node.id != null) {
+        return Fail(new Error('${name} cannot have an id', node.pos));
+      }
     }
 
     for (child in node.children) switch child.type {

@@ -1,4 +1,4 @@
-[schema boxconfig]
+[schema std.boxconfig]
 
 [root]
   [child config] 

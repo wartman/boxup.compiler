@@ -39,7 +39,7 @@ class VisualReporter implements Reporter {
       }
     }
 
-    var line = source.content.substring(0, max).split('\n').length;
+    var line = source.content.substring(0, max).split('\n').length - 1; // why do we need to minus one?
     var textLines = text.split('\n');
     var start = 0;
     

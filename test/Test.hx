@@ -25,8 +25,7 @@ function main() {
 
 [block link]
   type = Tag
-  [id]
-    required = true
+  [id] required = true
 
 [block tester]
   [property foo]
@@ -48,6 +47,8 @@ function main() {
       var source:Source = {
         file: 'foo.box',
         content: '
+[use test]
+
 YAMS and stuff.
 [header foo bar bin]
 How is things?

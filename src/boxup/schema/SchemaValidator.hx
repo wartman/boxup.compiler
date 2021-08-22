@@ -4,7 +4,7 @@ import boxup.schema.Schema;
 import boxup.Builtin;
 
 class SchemaValidator implements Validator {
-  static final schema = new Schema('d', [
+  static final schema = new Schema('@schema', [
     {
       name: BRoot,
       children: [
