@@ -22,15 +22,15 @@ class SchemaGenerator implements Generator<Schema> {
     },
     {
       name: BItalic,
-      type: BTag
+      type: BDynamicChildren
     },
     {
       name: BBold,
-      type: BTag
+      type: BDynamicChildren
     },
     {
       name: BRaw,
-      type: BTag
+      type: BDynamicChildren
     }
   ];
 

@@ -29,4 +29,18 @@ class Node {
     }
     return def;
   }
+  
+  public function toJson():Dynamic {
+    return {
+      type: switch type {
+        case Block(type, _): '@Block:$type';
+        case Property: '@Property';
+        case Paragraph: '@Paragraph';
+        case Text: '@Text';
+      },
+      id: id,
+      textContent: textContent,
+      children: children.map(c -> c.toJson())
+    };
+  }
 }

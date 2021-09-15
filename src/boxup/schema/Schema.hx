@@ -138,7 +138,7 @@ class BlockDefinition {
       }
     }
 
-    for (child in node.children) switch child.type {
+    if (type != BDynamicChildren) for (child in node.children) switch child.type {
       case Block(type, isTag): switch validateChild(type, isTag, child) {
         case Fail(error): return Fail(error);
         case Ok(_):

@@ -13,3 +13,4 @@
 -main Test
 
 -js dist/test.js
+-cmd node dist/test

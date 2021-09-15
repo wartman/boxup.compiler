@@ -58,7 +58,13 @@ class Parser {
     ignoreWhitespace();
 
     if (!check(TokCloseBracket)) {
-      id = readWhile(() -> !check(TokCloseBracket)).merge().value;
+      id = if (match(TokSingleQuote)) {
+        parseString(TokSingleQuote).value;
+      } else if (match(TokDoubleQuote)) {
+        parseString(TokDoubleQuote).value;
+      } else {
+        readWhile(() -> !check(TokCloseBracket)).merge().value;
+      }
     }
 
     consume(TokCloseBracket);
@@ -96,18 +102,7 @@ class Parser {
     var start = peek();
     var children:Array<Node> = [];
 
-    do {
-      if (match(TokOpenAngleBracket))
-        children.push(parseTaggedBlock());
-      else if (match(TokUnderline))
-        children.push(parseDecoration(BItalic, TokUnderline));
-      else if (match(TokStar))
-        children.push(parseDecoration(BBold, TokStar));
-      else if (match(TokRaw))
-        children.push(parseDecoration(BRaw, TokRaw));
-      else
-        children.push(parseTextPart(indent));
-    } while (!isAtEnd() && !isNewline(peek()));
+    do children.push(parseText(indent)) while (!isAtEnd() && !isNewline(peek()));
 
     return {
       type: Paragraph,
@@ -116,22 +111,34 @@ class Parser {
     }
   }
 
-  function parseDecoration(name:Builtin, delimiter:TokenType):Node {
-    var tok = readWhile(() -> !check(delimiter)).merge();
+  function parseDecoration(indent:Int, name:Builtin, delimiter:TokenType):Node {
+    var start = peek();
+    var children:Array<Node> = [];
+    while (!check(delimiter) && !isAtEnd() && !isNewline(peek())) {
+      children.push(parseText(indent));
+    }
     consume(delimiter);
     return {
       type: Block(name, false),
-      children: [
-        {
-          type: Text,
-          textContent: tok.value,
-          pos: tok.pos
-        }
-      ],
-      pos: tok.pos
+      children: children,
+      pos: start.getMergedPos(previous())
     }
   }
   
+  function parseText(indent:Int):Node {
+    return if (match(TokOpenAngleBracket)) {
+      parseTaggedBlock();
+    } else if (match(TokUnderline)) {
+      parseDecoration(indent, BItalic, TokUnderline);
+    } else if (match(TokStar)) {
+      parseDecoration(indent, BBold, TokStar);
+    } else if (match(TokRaw)) {
+      parseDecoration(indent, BRaw, TokRaw);
+    } else {
+      parseTextPart(indent);
+    }
+  }
+
   function parseTextPart(indent:Int):Node {
     var read = () -> readWhile(() -> 
       !checkAny([ 

@@ -1,3 +1,5 @@
+import haxe.Json;
+import boxup.generator.JsonGenerator;
 import boxup.generator.NullGenerator;
 import boxup.schema.SchemaGenerator;
 import boxup.schema.SchemaValidator;
@@ -43,7 +45,7 @@ function main() {
   compiler
     .compile(source)
     .map(def -> {
-      var compiler = new Compiler(new NullGenerator(), def, reporter);
+      var compiler = new Compiler(new JsonGenerator(), def, reporter);
       var source:Source = {
         file: 'foo.box',
         content: '
@@ -56,7 +58,7 @@ How is things?
 [tester]
   foo = bar
   
-  And this <works>[link https://www.foo.bar] too!
+  And _this <works>[link https://www.foo.bar]_ too!
 '
       };
 
@@ -66,7 +68,8 @@ How is things?
       Sys.println('Compile failed');
       Sys.exit(1);
     })
-    .handleValue(_ -> {
+    .handleValue(value -> {
+      trace(Json.stringify(value, '  '));
       Sys.print('Compile succeeded');
       Sys.exit(0);
     });
