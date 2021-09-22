@@ -33,8 +33,8 @@ function main() {
 
 [block id = tester]
   [property id = foo]
-    [option id = bar]
-    [option id = foo]
+    [option value = bar]
+    [option value = foo]
   [child id = paragraph]
 '
   };
@@ -63,7 +63,7 @@ How is things?
 [tester]
   foo = bar
   
-  And _this <works>[link href="https://www.foo.bar"]_ too!
+  And _this <works>[link "https://www.foo.bar"]_ too!
 '
       };
 

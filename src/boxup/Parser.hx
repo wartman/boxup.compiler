@@ -214,6 +214,9 @@ class Parser {
 
   function parseProperty(value:()->Null<Token>):Node {
     var id = identifier();
+    if (id == null) {
+      throw error('Expected an identifier', peek().pos);
+    }
     ignoreWhitespace();
     consume(TokEquals);
     ignoreWhitespace();
@@ -289,7 +292,7 @@ class Parser {
   function checkIdentifier() {
     return checkTokenValue(peek(), isAlphaNumeric)
       || check(TokUnderline)
-      || checkTokenValue(peek(), c -> c == '-');
+      || checkTokenValue(peek(), c -> c == '-' || c == '.');
   }
   
   function findIndentWithoutNewline() {

@@ -91,7 +91,7 @@ class SchemaGenerator implements Generator<Schema> {
           required: n.getProperty('required', 'false') == 'true',
           type: n.getProperty('type', 'String'),
           allowedValues: allowed.length > 0
-            ? allowed.map(n -> n.id)
+            ? allowed.map(n -> n.getProperty('value'))
             : []
         }:PropertyDefinition);
       });

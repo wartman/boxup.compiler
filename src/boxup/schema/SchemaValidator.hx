@@ -85,7 +85,9 @@ class SchemaValidator implements Validator {
 
     {
       name: 'option',
-      id: { required: true, type: VAny }
+      properties: [
+        { name: 'value', required: true }
+      ]
     },
 
     {
