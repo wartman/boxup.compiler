@@ -8,34 +8,37 @@
   date = 10/28/2020
 
 [page]
-  [panel 1]
+  [panel id=1]
     We open on a dark and stormy night.
   
-  [panel 2]
+  [panel id=2]
     FRED turns to his friend.
 
-    [dialog Fred]
+    [dialog]
+      character = Fred
       modifier = Looking around nervously
       
       Hey Bob, it sure is _stormy_ out here.
       [cont]
       Kind of *scary*.
 
-    [dialog Bob Bobstine]
+    [dialog]
+      character = Bob Bobstine
+
       You got that right, friend.
     
-  [panel 3]
+  [panel id=3]
     There is a long and awkward silence.
 
 [page]
-  [panel 1]
+  [panel id=1]
     A lightning bolt comes out of nowhere and
     incinerates both characters. It is grisly
     and a bit horrifying.
 
     But also funny.
 
-  [panel 2]
+  [panel id=2]
     Fade to black.
 
     In a comic.

@@ -10,7 +10,6 @@ enum abstract TokenType(String) to String {
   var TokRaw = '`';
   var TokEquals = '=';
   var TokWhitespace = '<whitespace>';
-  var TokIdentifier = '<identifier>';
   var TokText = '<text>';
   var TokNewline = '<newline>';
   var TokEof = '<eof>';

@@ -1,3 +1,5 @@
+import boxup.schema.SchemaCollection;
+import boxup.schema.SchemaAwareValidator;
 import haxe.Json;
 import boxup.generator.JsonGenerator;
 import boxup.generator.NullGenerator;
@@ -14,26 +16,26 @@ function main() {
 [schema test]
 
 [root]
-  [child paragraph]
-  [child header]
-  [child tester]
+  [child id = paragraph]
+  [child id = header]
+  [child id = tester]
 
-[block header]
-  [id] required = true
+[block id = header]
+  [id required = true]
   
-[block paragraph]
+[block id = paragraph]
   type = Paragraph
-  [child link]
+  [child id = link]
 
-[block link]
+[block id = link]
   type = Tag
-  [id] required = true
+  [property id = href required = true]
 
-[block tester]
-  [property foo]
-    [option bar]
-    [option foo]
-  [child paragraph]
+[block id = tester]
+  [property id = foo]
+    [option id = bar]
+    [option id = foo]
+  [child id = paragraph]
 '
   };
   var reporter = new VisualReporter();
@@ -45,20 +47,23 @@ function main() {
   compiler
     .compile(source)
     .map(def -> {
-      var compiler = new Compiler(new JsonGenerator(), def, reporter);
+      var compiler = new Compiler(
+        new JsonGenerator(), 
+        new SchemaAwareValidator(new SchemaCollection([ def ])), 
+        reporter);
       var source:Source = {
         file: 'foo.box',
         content: '
 [use test]
 
 YAMS and stuff.
-[header foo bar bin]
+[header id = "foo bar bin"]
 How is things?
 
 [tester]
   foo = bar
   
-  And _this <works>[link https://www.foo.bar]_ too!
+  And _this <works>[link href="https://www.foo.bar"]_ too!
 '
       };
 

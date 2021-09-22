@@ -16,11 +16,6 @@ class SchemaGenerator implements Generator<Schema> {
 
   static final defaultBlocks:Array<BlockDefinition> = [
     {
-      name: Keyword.KUse,
-      type: BNormal,
-      id: { required: true }
-    },
-    {
       name: BItalic,
       type: BDynamicChildren
     },
@@ -45,7 +40,7 @@ class SchemaGenerator implements Generator<Schema> {
     }
 
     for (node in nodes) switch node.type {
-      case Block('schema', false):
+      case Meta(Keyword.KSchema):
         if (node.id != null) id = node.id;
         var metas = node.children.filter(c -> c.type.equals(Block('meta', false)));
         for (m in metas) {
@@ -54,19 +49,10 @@ class SchemaGenerator implements Generator<Schema> {
             meta.set(suffix != null ? '${suffix}.${child.id}' : child.id, child.textContent);
           }
         }
-        // todo: handle imports
       case Block('root', false):
         blocks.push({
           name: BRoot,
           children: generateChildren(node)
-            .concat([
-              // Ensure we have a `[use $schema]` block always
-              // available in the root.
-              {
-                name: Keyword.KUse,
-                multiple: false
-              }
-            ])
         });
       case Block('block', false):
         var type:BlockDefinitionType = node.getProperty('type', BlockDefinitionType.BNormal);

@@ -3,6 +3,7 @@ package boxup;
 using Lambda;
 
 enum NodeType {
+  Meta(keyword:Keyword);
   Block(type:String, ?isTag:Bool);
   Property;
   Paragraph;
@@ -33,6 +34,7 @@ class Node {
   public function toJson():Dynamic {
     return {
       type: switch type {
+        case Meta(keyword): '@Meta:$keyword';
         case Block(type, _): '@Block:$type';
         case Property: '@Property';
         case Paragraph: '@Paragraph';

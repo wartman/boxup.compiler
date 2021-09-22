@@ -107,6 +107,8 @@ class BlockDefinition {
     }
 
     function validateProp(prop:Node):Result<Node> {
+      if (prop.id == Keyword.KId) return Ok(prop);
+
       var propDef = properties.find(p -> p.name == prop.id);
       
       if (propDef == null) switch type {
@@ -139,6 +141,7 @@ class BlockDefinition {
     }
 
     if (type != BDynamicChildren) for (child in node.children) switch child.type {
+      case Meta(_):
       case Block(type, isTag): switch validateChild(type, isTag, child) {
         case Fail(error): return Fail(error);
         case Ok(_):

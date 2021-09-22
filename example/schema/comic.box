@@ -1,50 +1,46 @@
 [schema comic]
 
 [root]
-  [child comic] 
+  [child id=comic] 
     required = true
     multiple = false
-  [child paragraph]
-  [child page]
+  [child id=paragraph]
+  [child id=page]
 
-[block comic]
-  [property title] 
+[block id=comic]
+  [property id=title] 
     required = true
-  [property author]
+  [property id=author]
     required = true
-  [property version]
+  [property id=version]
     type = Int
-  [property date]
+  [property id=date]
     type = Date
-  [property firstPageNumber]
+  [property id=firstPageNumber]
     type = Int
 
-[block page]
-  [child panel]
-  [child notes]
+[block id=page]
+  [child id=panel]
+  [child id=notes]
 
-[block notes]
+[block id=notes]
   [id]
-  [child paragraph]
-  [child list]
+  [child id=paragraph]
+  [child id=list]
 
-[block panel]
-  [id]
-    type = Int
-    required = true
-  [child dialog]
-    alias = @
-  [child paragraph]
-  [child notes]
+[block id=panel]
+  [id type = Int required = true]
+  [child id=dialog]
+  [child id=paragraph]
+  [child id=notes]
 
-[block dialog]
-  [id]
-    required = true
-  [property modifier]
-  [child paragraph]
-  [child cont]
+[block id=dialog]
+  [property id=character required=true]
+  [property id=modifier]
+  [child id=paragraph]
+  [child id=cont]
 
-[block cont]
+[block id=cont]
 
-[block paragraph]
+[block id=paragraph]
   type = Paragraph

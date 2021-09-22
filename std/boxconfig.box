@@ -1,39 +1,39 @@
 [schema std.boxconfig]
 
 [root]
-  [child config] 
+  [child id=config] 
     required = true
     multiple = false
-  [child task]
+  [child id=task]
 
 [/ Basic configuration options. /]
-[block config]
+[block id=config]
   [/ The folder to find schemas, relative to
    / the `.boxconfig` file.
    /]
-  [property schemaSource] 
+  [property id=schemaSource] 
     required = true
 
 [/ Registers a task for the cli to execute. /]
-[block task]
+[block id=task]
   [/ An optional ID -- just used as a label during
    / debugging.
    /]
   [id]
   
   [/ The folder to load documents from. /]
-  [property source]
+  [property id=source]
     required = true
 
   [/ The folder compiled files should be placed in. /]
-  [property destination]
+  [property id=destination]
     required = true
 
   [/ The generator this task should use. /]
-  [property generator]
+  [property id=generator]
     required = true
 
   [/ A comma-delimited whitelist of definitions that should
    / be allowed.
    /]
-  [property filter]
+  [property id=filter]

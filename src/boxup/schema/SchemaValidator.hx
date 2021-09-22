@@ -8,31 +8,17 @@ class SchemaValidator implements Validator {
     {
       name: BRoot,
       children: [
-        { name: Keyword.KSchema, required: true, multiple: false },
         { name: 'root', required: true, multiple: false },
         { name: 'block' }
       ]
     },
 
     {
-      name: 'schema',
-      id: { required: false },
-      children: [
-        { name: 'import' },
-        { name: 'meta' }
-      ]
-    },
-
-    {
       name: 'root',
       children: [
-        { name: 'child' }
+        { name: 'child' },
+        { name: 'meta' }
       ]
-    },
-
-    {
-      name: 'import',
-      id: { required: true }
     },
 
     {

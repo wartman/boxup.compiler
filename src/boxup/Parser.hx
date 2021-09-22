@@ -1,6 +1,7 @@
 package boxup;
 
 using StringTools;
+using Lambda;
 using boxup.TokenTools;
 
 class Parser {
@@ -34,14 +35,13 @@ class Parser {
       return parseRoot(indent, isInline);
     }
     if (match(TokOpenBracket)) return parseBlock(indent);
-    if (checkProperty()) return parseProperty();
+    if (checkProperty()) return parseProperty(parseValue);
     return parseParagraph(indent);
   }
 
   function parseBlock(indent:Int, isTag:Bool = false):Node {
     ignoreWhitespace();
 
-    var id:Null<String> = null;
     var type = identifier();
     var children:Array<Node> = [];
 
@@ -49,24 +49,26 @@ class Parser {
       throw error('Expected a block type', peek().pos);
     }
 
-    if (!isWhitespace(peek())) {
-      if (!check(TokCloseBracket)) {
-        throw error('Expected a `${TokenType.TokCloseBracket}` or a block ID', peek().pos);
-      }
-    }
-
     ignoreWhitespace();
 
-    if (!check(TokCloseBracket)) {
-      id = if (match(TokSingleQuote)) {
-        parseString(TokSingleQuote).value;
-      } else if (match(TokDoubleQuote)) {
-        parseString(TokDoubleQuote).value;
-      } else {
-        readWhile(() -> !check(TokCloseBracket)).merge().value;
-      }
+    if (isKeyword(type)) {
+      var id = identifier();
+      ignoreWhitespace();
+      consume(TokCloseBracket);
+      return {
+        type: Meta(type.value),
+        id: id.value,
+        children: [],
+        pos: type.pos
+      };
     }
 
+    while (!check(TokCloseBracket) && !isAtEnd()) {
+      ignoreWhitespace();
+      children.push(parseProperty(parseInlineValue));
+      ignoreWhitespace();
+    }
+    
     consume(TokCloseBracket);
 
     var childIndent:Int = 0;
@@ -90,9 +92,11 @@ class Parser {
       };
     }
 
+    var id = children.find(child -> child.id == Keyword.KId);
+
     return {
       type: Block(type.value, isTag),
-      id: id,
+      id: id != null ? id.children[0].textContent : null,
       children: children,
       pos: type.pos
     };
@@ -208,12 +212,12 @@ class Parser {
     return node;
   }
 
-  function parseProperty():Node {
+  function parseProperty(value:()->Null<Token>):Node {
     var id = identifier();
     ignoreWhitespace();
     consume(TokEquals);
     ignoreWhitespace();
-    var value = parseValue();
+    var value = value();
     if (value == null) {
       throw error('Expected a value', peek().pos);
     }
@@ -229,6 +233,16 @@ class Parser {
         }
       ]
     }
+  }
+
+  function parseInlineValue():Null<Token> {
+    return if (match(TokSingleQuote)) {
+      parseString(TokSingleQuote);
+    } else if (match(TokDoubleQuote)) {
+      parseString(TokDoubleQuote);
+    } else {
+      readWhile(() -> checkTokenValue(peek(), isAlphaNumeric)).merge();
+    } 
   }
 
   function parseValue():Null<Token> {
@@ -334,6 +348,10 @@ class Parser {
 
   function isWhitespace(token:Token) {
     return token.type == TokWhitespace;
+  }
+
+  function isKeyword(token:Token) {
+    return token.value == Keyword.KSchema || token.value == Keyword.KUse;
   }
   
   function isDigit(c:String):Bool {
