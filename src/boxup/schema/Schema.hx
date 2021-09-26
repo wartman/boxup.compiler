@@ -113,6 +113,10 @@ class BlockDefinition {
       
       if (propDef == null) switch type {
         case BPropertyBag:
+          if (existingProps.contains(prop.id)) {
+            return Fail(new Error('Duplicate property ${prop.id}', prop.pos));
+          }
+          return Ok(prop);
         default:
           return Fail(new Error('Invalid property ${prop.id}', prop.pos));
       }

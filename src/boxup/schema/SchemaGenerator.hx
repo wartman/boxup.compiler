@@ -102,7 +102,7 @@ class SchemaGenerator implements Generator<Schema> {
     for (n in node.children.filter(n -> n.type.equals(Block('meta', false)))) {
       var suffix = n.id;
       for (child in n.children.filter(n -> n.type.equals(Property))) {
-        meta.set(suffix != null ? '${suffix}.${child.id}' : child.id, child.textContent);    
+        meta.set(suffix != null ? '${suffix}.${child.id}' : child.id, child.children[0].textContent);    
       }
     }
     return meta;
