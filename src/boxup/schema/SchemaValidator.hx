@@ -10,6 +10,7 @@ class SchemaValidator implements Validator {
       children: [
         { name: 'root', required: true, multiple: false },
         { name: 'schema', required: true, multiple: false },
+        { name: 'group' },
         { name: 'block' }
       ]
     },
@@ -25,13 +26,30 @@ class SchemaValidator implements Validator {
       name: 'root',
       children: [
         { name: 'child' },
+        { name: 'use' },
         { name: 'meta' }
       ]
     },
 
     {
+      name: 'group',
+      parameters: [
+        { pos: 0, type: VString }
+      ],
+      children: [
+        { name: 'child' }
+      ]
+    },
+
+    {
+      name: 'use',
+      parameters: [
+        { pos: 0, type: VString }
+      ]
+    },
+
+    {
       name: 'block',
-      // id: { required: true },
       parameters: [
         { pos: 0, type: VString }
       ],
@@ -46,6 +64,7 @@ class SchemaValidator implements Validator {
       ],
       children: [
         { name: 'id', multiple: false },
+        { name: 'use' },
         { name: 'child' },
         { name: 'parameter' },
         { name: 'property' },
@@ -70,7 +89,6 @@ class SchemaValidator implements Validator {
 
     {
       name: 'child',
-      // id: { required: true },
       parameters: [
         { pos: 0, type: VString }
       ],
@@ -100,7 +118,6 @@ class SchemaValidator implements Validator {
 
     {
       name: 'property',
-      // id: { required: true },
       parameters: [
         { pos: 0, type: VString }
       ],

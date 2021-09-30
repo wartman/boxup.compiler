@@ -45,14 +45,14 @@ class SchemaGenerator implements Generator<Schema> {
       default: '<unknown>';
     }
 
-    for (node in nodes) switch node.type {
+    try for (node in nodes) switch node.type {
       case Block(Keyword.KSchema, _):
         if (node.getParameter(0) != null) id = node.getParameter(0);
         meta = generateMeta(node);
       case Block('root', false):
         blocks.push({
           name: BRoot,
-          children: generateChildren(node).concat([
+          children: generateChildren(node, nodes).concat([
             { name: Keyword.KUse, required: true, multiple: false }
           ])
         });
@@ -74,12 +74,14 @@ class SchemaGenerator implements Generator<Schema> {
           properties: generateProperties(node),
           children: switch type {
             case BParagraph:
-              defaultParagraphChildren.concat(generateChildren(node));
+              defaultParagraphChildren.concat(generateChildren(node, nodes));
             default:
-              generateChildren(node);
+              generateChildren(node, nodes);
           }
         });
       default:
+    } catch (e:Error) {
+      return Fail(e);
     }
 
     return Ok(new Schema(id, blocks, meta));
@@ -130,13 +132,26 @@ class SchemaGenerator implements Generator<Schema> {
     return meta;
   }
 
-  function generateChildren(node:Node) {
-    return node.children
+  function generateChildren(node:Node, root:Array<Node>) {
+    var children = node.children
       .filter(n -> n.type.equals(Block('child', false)))
       .map(n -> ({
         name: n.getParameter(0),
         required: n.getProperty('required', 'false') == 'true',
         multiple: n.getProperty('multiple', 'true') == 'true'
-      }:ChildDefinition)); 
+      }:ChildDefinition));
+    var uses = node.children.filter(n -> n.type.equals(Block(Keyword.KUse, false)));
+    for (reference in uses) {
+      var name = reference.getParameter(0);
+      var use = root.find(node -> 
+        node.type.equals(Block('group', false))
+        && node.getParameter(0) == name
+      );
+      if (use == null) {
+        throw new Error('No group exists with the name "$name"', reference.params[0].pos);
+      }
+      children = children.concat(generateChildren(use, root));
+    }
+    return children;
   }
 }

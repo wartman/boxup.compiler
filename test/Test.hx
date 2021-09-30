@@ -14,10 +14,13 @@ function main() {
     content: '
 [schema test]
 
-[root]
+[group content]
   [child paragraph]
   [child header]
   [child tester]
+
+[root]
+  [use content]
 
 [block header]
   [parameter]
