@@ -191,7 +191,10 @@ class BlockDefinition {
         // ?
     }
 
-    for (i in 0...node.params.length) validateParam(node.params[i], i);
+    for (i in 0...node.params.length) switch validateParam(node.params[i], i) {
+      case Fail(error): return Fail(error);
+      case Ok(_):
+    }
 
     for (def in parameters) {
       if (!existingParams.contains(def.pos)) {
