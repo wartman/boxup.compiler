@@ -9,7 +9,15 @@ class SchemaValidator implements Validator {
       name: BRoot,
       children: [
         { name: 'root', required: true, multiple: false },
+        { name: 'schema', required: true, multiple: false },
         { name: 'block' }
+      ]
+    },
+
+    {
+      name: 'schema',
+      parameters: [
+        { pos: 1, type: VString }
       ]
     },
 
@@ -36,6 +44,7 @@ class SchemaValidator implements Validator {
       children: [
         { name: 'id', multiple: false },
         { name: 'child' },
+        { name: 'parameter' },
         { name: 'property' },
         { name: 'meta' }
       ]
@@ -51,7 +60,8 @@ class SchemaValidator implements Validator {
           ValueType.VInt,
           ValueType.VFloat,
           ValueType.VBool
-        ] }
+        ] },
+        { name: 'parameter', type: VInt, required: false }
       ]
     },
 
@@ -61,6 +71,23 @@ class SchemaValidator implements Validator {
       properties: [
         { name: 'required', type: VBool, required: false },
         { name: 'multiple', type: VBool, def: 'false', required: false }
+      ]
+    },
+
+    {
+      name: 'parameter',
+      properties: [
+        { name: 'type', type: VString, required: false, def: ValueType.VString, allowedValues: [
+          ValueType.VString,
+          ValueType.VAny,
+          ValueType.VInt,
+          ValueType.VFloat,
+          ValueType.VBool
+        ] },
+        { name: 'default', type: VAny, required: false }
+      ],
+      children: [
+        { name: 'option' }
       ]
     },
 
@@ -93,6 +120,9 @@ class SchemaValidator implements Validator {
     {
       name: 'meta',
       id: { required: true },
+      parameters: [
+        { pos: 1, type: VString }
+      ],
       type: BPropertyBag
     }
   ], []);

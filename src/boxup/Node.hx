@@ -3,8 +3,8 @@ package boxup;
 using Lambda;
 
 enum NodeType {
-  Meta(keyword:Keyword);
   Block(type:String, ?isTag:Bool);
+  Parameter(pos:Int);
   Property;
   Paragraph;
   Text;
@@ -31,12 +31,25 @@ class Node {
     return def;
   }
   
+  public function getParameter(pos:Int, def:String = null):String {
+    for (c in children) switch c.type {
+      case Parameter(p) if (p == pos):
+        var data = c.children.find(n -> n.type.equals(Text));
+        return if (data != null && data.textContent != null)
+          data.textContent;
+        else
+          def;
+      default:
+    }
+    return def;
+  }
+
   public function toJson():Dynamic {
     return {
       type: switch type {
-        case Meta(keyword): '@Meta:$keyword';
         case Block(type, _): '@Block:$type';
         case Property: '@Property';
+        case Parameter(pos): '@Parameter:$pos';
         case Paragraph: '@Paragraph';
         case Text: '@Text';
       },

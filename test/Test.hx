@@ -21,7 +21,9 @@ function main() {
   [child id = tester]
 
 [block id = header]
-  [id required = true]
+  [parameter type = String]
+  [parameter type = Int]
+  [property id = type]
   
 [block id = paragraph]
   type = Paragraph
@@ -57,7 +59,7 @@ function main() {
 [use test]
 
 YAMS and stuff.
-[header id = "foo bar bin"]
+[header "foo bar bin" 1 type=foo]
 How is things?
 
 [tester]

@@ -69,6 +69,7 @@ class BlockDefinition {
   public final meta:Map<String, String> = [];
   public final type:BlockDefinitionType = BNormal;
   public final id:Null<IdDefintion> = null;
+  public final parameters:Array<ParameterDefinition> = [];
   public final properties:Array<PropertyDefinition> = [];
   public final children:Array<ChildDefinition> = [];
   
@@ -85,6 +86,7 @@ class BlockDefinition {
   public function validate(node:Node, schema:Schema):Result<Node> {
     var existingChildren:Array<String> = [];
     var existingProps:Array<String> = [];
+    var existingParams:Array<Int> = [];
 
     function validateChild(type:String, isTag:Bool, child:Node):Result<Node> {
       if (!children.exists(c -> c.name == type)) {
@@ -104,6 +106,18 @@ class BlockDefinition {
       existingChildren.push(type);
 
       return blockDef.validate(child, schema);
+    }
+
+    function validateParam(param:Node, pos:Int):Result<Node> {
+      if (param.id == Keyword.KId) return Ok(param);
+
+      var paramDef = parameters.find(p -> p.pos == pos);
+
+      if (paramDef == null) return Fail(new Error('Invalid parameter', param.pos));
+
+      existingParams.push(paramDef.pos);
+
+      return paramDef.validate(param);
     }
 
     function validateProp(prop:Node):Result<Node> {
@@ -145,8 +159,11 @@ class BlockDefinition {
     }
 
     if (type != BDynamicChildren) for (child in node.children) switch child.type {
-      case Meta(_):
       case Block(type, isTag): switch validateChild(type, isTag, child) {
+        case Fail(error): return Fail(error);
+        case Ok(_):
+      }
+      case Parameter(pos): switch  validateParam(child, pos) {
         case Fail(error): return Fail(error);
         case Ok(_):
       }
@@ -173,6 +190,12 @@ class BlockDefinition {
         return Fail(new Error('Invalid child', child.pos));
       case Text:
         // ?
+    }
+
+    for (def in parameters) {
+      if (!existingParams.contains(def.pos)) {
+        return Fail(new Error('Requires a ${def.type} parameter at position ${def.pos}', node.pos));
+      }
     }
     
     for (def in properties) {
@@ -205,13 +228,20 @@ private function checkType(value:String, type:ValueType, pos:Position):Result<St
       case 'true' | 'false': Ok(value);
       default: Fail(new Error('Expected a Bool', pos));
     }
-    case VString | VAny: Ok(value);
-    case VInt: try { 
-      @:keep Std.parseInt(value);
-      Ok(value); 
-    } catch (e) {
-      Fail(new Error('Expected an Int', pos));
-    }
+    case VString:
+      Ok(value);
+      // if (isAlpha(value.charAt(0))) {
+      //   Ok(value);
+      // } else {
+      //   Fail(new Error('Expected a string', pos));
+      // }
+    case VAny: 
+      Ok(value);
+    case VInt: 
+      for (i in 0...value.length) if (!isDigit(value.charAt(i))) {
+        return Fail(new Error('Expected an Int', pos));
+      }
+      Ok(value);
     case VFloat: try { 
       @:keep Std.parseFloat(value);
       Ok(value); 
@@ -221,10 +251,21 @@ private function checkType(value:String, type:ValueType, pos:Position):Result<St
   }
 }
 
+function isDigit(c:String):Bool {
+  return c >= '0' && c <= '9';
+}
+
+function isAlpha(c:String):Bool {
+  return (c >= 'a' && c <= 'z') ||
+         (c >= 'A' && c <= 'Z');
+}
+
+
 @:structInit
 class IdDefintion {
   public final required:Bool = false;
   public final type:ValueType = VString;
+  public final parameter:Int = 0;
 
   public function validate(value, pos) {
     return checkType(value, type, pos);
@@ -236,6 +277,34 @@ class ChildDefinition {
   public final name:String;
   public final required:Bool = false;
   public final multiple:Bool = true;
+}
+
+@:structInit
+class ParameterDefinition {
+  public final pos:Int;
+  public final def:Null<String> = null;
+  public final type:ValueType = VString;
+  public final allowedValues:Array<String> = [];
+
+  public function validate(prop:Node):Result<Node> {
+    var child = prop.children.find(p -> switch p.type {
+      case Text: true;
+      default: false;
+    });
+
+    var value = child != null
+      ? child.textContent
+      : def;
+
+    if (allowedValues.length > 0) {
+      if (!allowedValues.contains(value)) {
+        return Fail(new Error('Must be one of ${allowedValues.join(', ')}', child.pos));
+      }
+    }
+
+    return checkType(value, type, child.pos)
+      .map(_ -> Ok(prop));
+  }
 }
 
 @:structInit

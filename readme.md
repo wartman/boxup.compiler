@@ -23,7 +23,7 @@ Boxup is a markup language, designed for situations where Markdown doesn't provi
   title = Hello world!
   slug = hello_world
 
-[section id=one]
+[section one]
   css = "
     width: 100%;
     background: blue;
@@ -60,8 +60,15 @@ Boxup is a markup language, designed for situations where Markdown doesn't provi
     required = true
 
 [block id=article]
-  [property id=title]
-    required = true
+  [/ In addition to properties, you can define
+   / "parameters" on your blocks. In Boxup, parameters
+   / are *positional* rather than *named* properties,
+   / which can be handy in some situations.
+   /
+   / Parameters *must* come before properties in a block header and 
+   / they are space-delimited. 
+   /]
+  [parameter pos=1 required = true]
   [property id=slug]
 
 [block id=section]

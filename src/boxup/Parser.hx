@@ -44,6 +44,8 @@ class Parser {
 
     var type = identifier();
     var children:Array<Node> = [];
+    var paramsAllowed = true;
+    var paramPos = 0;
 
     if (type == null) {
       throw error('Expected a block type', peek().pos);
@@ -51,22 +53,15 @@ class Parser {
 
     ignoreWhitespace();
 
-    if (isKeyword(type)) {
-      var id = identifier();
-      ignoreWhitespace();
-      consume(TokCloseBracket);
-      return {
-        type: Meta(type.value),
-        id: id.value,
-        children: [],
-        pos: type.pos
-      };
-    }
-
     while (!check(TokCloseBracket) && !isAtEnd()) {
-      ignoreWhitespace();
-      children.push(parseProperty(parseInlineValue));
-      ignoreWhitespace();
+      ignoreWhitespaceAndNewline();
+      if (!checkProperty() && paramsAllowed) {
+        children.push(parseParameter(++paramPos));
+      } else {
+        paramsAllowed = false;
+        children.push(parseProperty(parseInlineValue));
+      }
+      ignoreWhitespaceAndNewline();
     }
     
     consume(TokCloseBracket);
@@ -212,6 +207,26 @@ class Parser {
     return node;
   }
 
+  function parseParameter(pos:Int):Node {
+    var value = if (checkIdentifier()) {
+      identifier();
+    } else {
+      parseValue();
+    }
+    return {
+      type: Parameter(pos),
+      id: '@$pos',
+      pos: value.pos,
+      children: [
+        {
+          type: Text,
+          textContent: value.value,
+          pos: value.pos
+        }
+      ]
+    };
+  }
+
   function parseProperty(value:()->Null<Token>):Node {
     var id = identifier();
     if (id == null) {
@@ -244,7 +259,7 @@ class Parser {
     } else if (match(TokDoubleQuote)) {
       parseString(TokDoubleQuote);
     } else {
-      readWhile(() -> checkTokenValue(peek(), isAlphaNumeric)).merge();
+      readWhile(checkIdentifier).merge();
     } 
   }
 

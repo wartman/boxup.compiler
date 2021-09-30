@@ -16,6 +16,12 @@ class SchemaGenerator implements Generator<Schema> {
 
   static final defaultBlocks:Array<BlockDefinition> = [
     {
+      name: Keyword.KUse,
+      parameters: [
+        { pos: 1, type: VString }
+      ]
+    },
+    {
       name: BItalic,
       type: BDynamicChildren
     },
@@ -40,8 +46,8 @@ class SchemaGenerator implements Generator<Schema> {
     }
 
     for (node in nodes) switch node.type {
-      case Meta(Keyword.KSchema):
-        if (node.id != null) id = node.id;
+      case Block(Keyword.KSchema, _):
+        if (node.id != null) id = node.getParameter(1);
         var metas = node.children.filter(c -> c.type.equals(Block('meta', false)));
         for (m in metas) {
           var suffix = m.id;
@@ -52,7 +58,9 @@ class SchemaGenerator implements Generator<Schema> {
       case Block('root', false):
         blocks.push({
           name: BRoot,
-          children: generateChildren(node)
+          children: generateChildren(node).concat([
+            { name: Keyword.KUse, required: true, multiple: false }
+          ])
         });
       case Block('block', false):
         var type:BlockDefinitionType = node.getProperty('type', BlockDefinitionType.BNormal);
@@ -62,11 +70,13 @@ class SchemaGenerator implements Generator<Schema> {
           id: id != null
             ? {
               required: id.getProperty('required', 'false') == 'true',
-              type: id.getProperty('type', ValueType.VString)
+              type: id.getProperty('type', ValueType.VString),
+              parameter: Std.parseInt(id.getProperty('parameter', '0'))
             }
             : null,
           type: type,
           meta: generateMeta(node),
+          parameters: generateParameters(node),
           properties: generateProperties(node),
           children: switch type {
             case BParagraph:
@@ -79,6 +89,22 @@ class SchemaGenerator implements Generator<Schema> {
     }
 
     return Ok(new Schema(id, blocks, meta));
+  }
+
+  function generateParameters(node:Node) {
+    var pos = 0;
+    return node.children
+      .filter(n -> n.type.equals(Block('parameter', false)))
+      .map(n -> {
+        var allowed = n.children.filter(n -> n.type.equals(Block('option', false)));
+        ({
+          pos: ++pos,
+          type: n.getProperty('type', 'String'),
+          allowedValues: allowed.length > 0
+            ? allowed.map(n -> n.getProperty('value'))
+            : []
+        }:ParameterDefinition);
+      });
   }
 
   function generateProperties(node:Node) {
