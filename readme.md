@@ -46,20 +46,24 @@ Boxup is a markup language, designed for situations where Markdown doesn't provi
 [schema example]
 
 [root]
-  [child id=article]
-    required = true
-  [child id=section]
-  [child id=paragraph]
+  [child article required = true]
+  [child section]
+  [child paragraph]
 
-[block id=paragraph]
+[block paragraph]
+  [/ Properties do not need to be defined in the block header: /]
   type = Paragraph
-  [child id=example]
+  [child example]
 
-[block id=example type=Tag]
-  [property id=content]
+[block example type=Tag]
+  [property content]
     required = true
 
-[block id=article]
+[block article]
+  [property title required=true]
+  [property slug]
+
+[block section]
   [/ In addition to properties, you can define
    / "parameters" on your blocks. In Boxup, parameters
    / are *positional* rather than *named* properties,
@@ -67,17 +71,14 @@ Boxup is a markup language, designed for situations where Markdown doesn't provi
    /
    / Parameters *must* come before properties in a block header and 
    / they are space-delimited. 
+   /
+   / Also note that parameters are ALWAYS required (at least for now).
    /]
-  [parameter pos=1 required = true]
-  [property id=slug]
+  [parameter type=String]
+  [property css]
+  [child header]
+  [child paragraph]
 
-[block id=section]
-  [id]
-    required = true
-  [property id=css]
-  [child id=header]
-  [child id=paragraph]
-
-[block id=header]
-  [child id=paragraph required = true]
+[block header]
+  [child paragraph required = true]
 ```

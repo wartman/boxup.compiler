@@ -1,5 +1,7 @@
 package boxup;
 
+import boxup.Node.NodeParam;
+
 using StringTools;
 using Lambda;
 using boxup.TokenTools;
@@ -45,7 +47,8 @@ class Parser {
     var type = identifier();
     var children:Array<Node> = [];
     var paramsAllowed = true;
-    var paramPos = 0;
+    // var paramPos = 0;
+    var params:Array<NodeParam> = [];
 
     if (type == null) {
       throw error('Expected a block type', peek().pos);
@@ -56,7 +59,7 @@ class Parser {
     while (!check(TokCloseBracket) && !isAtEnd()) {
       ignoreWhitespaceAndNewline();
       if (!checkProperty() && paramsAllowed) {
-        children.push(parseParameter(++paramPos));
+        params.push(parseParameter());
       } else {
         paramsAllowed = false;
         children.push(parseProperty(parseInlineValue));
@@ -91,6 +94,7 @@ class Parser {
 
     return {
       type: Block(type.value, isTag),
+      params: params,
       id: id != null ? id.children[0].textContent : null,
       children: children,
       pos: type.pos
@@ -207,24 +211,28 @@ class Parser {
     return node;
   }
 
-  function parseParameter(pos:Int):Node {
+  function parseParameter():NodeParam {
     var value = if (checkIdentifier()) {
       identifier();
     } else {
       parseValue();
     }
     return {
-      type: Parameter(pos),
-      id: '@$pos',
       pos: value.pos,
-      children: [
-        {
-          type: Text,
-          textContent: value.value,
-          pos: value.pos
-        }
-      ]
+      value: value.value
     };
+    // return {
+    //   type: Parameter(pos),
+    //   id: '@$pos',
+    //   pos: value.pos,
+    //   children: [
+    //     {
+    //       type: Text,
+    //       textContent: value.value,
+    //       pos: value.pos
+    //     }
+    //   ]
+    // };
   }
 
   function parseProperty(value:()->Null<Token>):Node {
@@ -239,6 +247,11 @@ class Parser {
     if (value == null) {
       throw error('Expected a value', peek().pos);
     }
+    // return {
+    //   name: id.value,
+    //   pos: id.getMergedPos(value),
+    //   value: value.value
+    // };
     return {
       type: Property,
       id: id.value,

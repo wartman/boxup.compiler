@@ -7,10 +7,10 @@
   source = src
   destination = dist/html
   generator = html  
-  filter = comic
+  [filter comic]
 
 [task md]
   source = src
   destination = dist/md
   generator = md  
-  filter = comic
+  [filter comic]

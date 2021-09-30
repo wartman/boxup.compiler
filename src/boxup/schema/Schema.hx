@@ -1,5 +1,6 @@
 package boxup.schema;
 
+import boxup.Node.NodeParam;
 import haxe.ds.Map;
 import boxup.Builtin;
 
@@ -108,9 +109,7 @@ class BlockDefinition {
       return blockDef.validate(child, schema);
     }
 
-    function validateParam(param:Node, pos:Int):Result<Node> {
-      if (param.id == Keyword.KId) return Ok(param);
-
+    function validateParam(param:NodeParam, pos:Int):Result<NodeParam> {
       var paramDef = parameters.find(p -> p.pos == pos);
 
       if (paramDef == null) return Fail(new Error('Invalid parameter', param.pos));
@@ -163,10 +162,10 @@ class BlockDefinition {
         case Fail(error): return Fail(error);
         case Ok(_):
       }
-      case Parameter(pos): switch  validateParam(child, pos) {
-        case Fail(error): return Fail(error);
-        case Ok(_):
-      }
+      // case Parameter(pos): switch  validateParam(child, pos) {
+      //   case Fail(error): return Fail(error);
+      //   case Ok(_):
+      // }
       case Property: switch validateProp(child) {
         case Fail(error): return Fail(error);
         case Ok(_):
@@ -192,9 +191,16 @@ class BlockDefinition {
         // ?
     }
 
+    for (i in 0...node.params.length) validateParam(node.params[i], i);
+
     for (def in parameters) {
       if (!existingParams.contains(def.pos)) {
-        return Fail(new Error('Requires a ${def.type} parameter at position ${def.pos}', node.pos));
+        var msg = if (def.meta.exists('schema.error')) {
+          def.meta.get('schema.error') + ' at position ${def.pos}.';
+        } else {
+          'Requires a ${def.type} parameter at position ${def.pos}.';
+        }
+        return Fail(new Error(msg, node.pos));
       }
     }
     
@@ -285,25 +291,25 @@ class ParameterDefinition {
   public final def:Null<String> = null;
   public final type:ValueType = VString;
   public final allowedValues:Array<String> = [];
+  public final meta:Map<String, String> = [];
 
-  public function validate(prop:Node):Result<Node> {
-    var child = prop.children.find(p -> switch p.type {
-      case Text: true;
-      default: false;
-    });
+  public function validate(param:NodeParam):Result<NodeParam> {
+    // var child = param.children.find(p -> switch p.type {
+    //   case Text: true;
+    //   default: false;
+    // });
 
-    var value = child != null
-      ? child.textContent
+    var value = param.value != null
+      ? param.value
       : def;
 
     if (allowedValues.length > 0) {
       if (!allowedValues.contains(value)) {
-        return Fail(new Error('Must be one of ${allowedValues.join(', ')}', child.pos));
+        return Fail(new Error('Must be one of ${allowedValues.join(', ')}', param.pos));
       }
     }
 
-    return checkType(value, type, child.pos)
-      .map(_ -> Ok(prop));
+    return checkType(value, type, param.pos).map(_ -> Ok(param));
   }
 }
 
@@ -314,6 +320,7 @@ class PropertyDefinition {
   public final required:Bool = false;
   public final type:ValueType = VString;
   public final allowedValues:Array<String> = [];
+  public final meta:Map<String, String> = [];
 
   public function validate(prop:Node):Result<Node> {
     var child = prop.children.find(p -> switch p.type {

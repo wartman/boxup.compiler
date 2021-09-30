@@ -18,7 +18,7 @@ class SchemaGenerator implements Generator<Schema> {
     {
       name: Keyword.KUse,
       parameters: [
-        { pos: 1, type: VString }
+        { pos: 0, type: VString }
       ]
     },
     {
@@ -47,14 +47,8 @@ class SchemaGenerator implements Generator<Schema> {
 
     for (node in nodes) switch node.type {
       case Block(Keyword.KSchema, _):
-        if (node.id != null) id = node.getParameter(1);
-        var metas = node.children.filter(c -> c.type.equals(Block('meta', false)));
-        for (m in metas) {
-          var suffix = m.id;
-          for (child in m.children.filter(c -> c.type.equals(Property))) {
-            meta.set(suffix != null ? '${suffix}.${child.id}' : child.id, child.textContent);
-          }
-        }
+        if (node.getParameter(0) != null) id = node.getParameter(0);
+        meta = generateMeta(node);
       case Block('root', false):
         blocks.push({
           name: BRoot,
@@ -66,7 +60,7 @@ class SchemaGenerator implements Generator<Schema> {
         var type:BlockDefinitionType = node.getProperty('type', BlockDefinitionType.BNormal);
         var id = node.children.find(n -> n.type.equals(Block('id', false)));
         blocks.push({
-          name: node.id,
+          name: node.getParameter(0),
           id: id != null
             ? {
               required: id.getProperty('required', 'false') == 'true',
@@ -98,8 +92,9 @@ class SchemaGenerator implements Generator<Schema> {
       .map(n -> {
         var allowed = n.children.filter(n -> n.type.equals(Block('option', false)));
         ({
-          pos: ++pos,
+          pos: pos++,
           type: n.getProperty('type', 'String'),
+          meta: generateMeta(n),
           allowedValues: allowed.length > 0
             ? allowed.map(n -> n.getProperty('value'))
             : []
@@ -113,9 +108,10 @@ class SchemaGenerator implements Generator<Schema> {
       .map(n -> {
         var allowed = n.children.filter(n -> n.type.equals(Block('option', false)));
         ({
-          name: n.id,
+          name: n.getParameter(0),
           required: n.getProperty('required', 'false') == 'true',
           type: n.getProperty('type', 'String'),
+          meta: generateMeta(n),
           allowedValues: allowed.length > 0
             ? allowed.map(n -> n.getProperty('value'))
             : []
@@ -126,9 +122,9 @@ class SchemaGenerator implements Generator<Schema> {
   function generateMeta(node:Node) {
     var meta:Map<String, String> = [];
     for (n in node.children.filter(n -> n.type.equals(Block('meta', false)))) {
-      var suffix = n.id;
+      var suffix = n.getParameter(0);
       for (child in n.children.filter(n -> n.type.equals(Property))) {
-        meta.set(suffix != null ? '${suffix}.${child.id}' : child.id, child.children[0].textContent);    
+        meta.set('${suffix}.${child.id}', child.children[0].textContent);    
       }
     }
     return meta;
@@ -138,7 +134,7 @@ class SchemaGenerator implements Generator<Schema> {
     return node.children
       .filter(n -> n.type.equals(Block('child', false)))
       .map(n -> ({
-        name: n.id,
+        name: n.getParameter(0),
         required: n.getProperty('required', 'false') == 'true',
         multiple: n.getProperty('multiple', 'true') == 'true'
       }:ChildDefinition)); 

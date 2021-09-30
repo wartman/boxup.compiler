@@ -1,10 +1,9 @@
+import haxe.Json;
 import boxup.schema.SchemaCollection;
 import boxup.schema.SchemaAwareValidator;
-import haxe.Json;
-import boxup.generator.JsonGenerator;
-import boxup.generator.NullGenerator;
 import boxup.schema.SchemaGenerator;
 import boxup.schema.SchemaValidator;
+import boxup.generator.JsonGenerator;
 import boxup.reporter.VisualReporter;
 import boxup.Compiler;
 import boxup.Source;
@@ -16,28 +15,28 @@ function main() {
 [schema test]
 
 [root]
-  [child id = paragraph]
-  [child id = header]
-  [child id = tester]
+  [child paragraph]
+  [child header]
+  [child tester]
 
-[block id = header]
-  [parameter type = String]
+[block header]
+  [parameter]
+    [meta schema error="Requires a title"]
   [parameter type = Int]
-  [property id = type]
+    [meta schema error="Requires a priority number"]
+  [property type]
   
-[block id = paragraph]
-  type = Paragraph
-  [child id = link]
+[block paragraph type=Paragraph]
+  [child link]
 
-[block id = link]
-  type = Tag
-  [property id = href required = true]
+[block link type=Tag]
+  [property href required = true]
 
-[block id = tester]
-  [property id = foo]
+[block tester]
+  [property foo]
     [option value = bar]
     [option value = foo]
-  [child id = paragraph]
+  [child paragraph]
 '
   };
   var reporter = new VisualReporter();

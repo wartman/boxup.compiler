@@ -17,7 +17,7 @@ class SchemaValidator implements Validator {
     {
       name: 'schema',
       parameters: [
-        { pos: 1, type: VString }
+        { pos: 0, type: VString }
       ]
     },
 
@@ -31,7 +31,10 @@ class SchemaValidator implements Validator {
 
     {
       name: 'block',
-      id: { required: true },
+      // id: { required: true },
+      parameters: [
+        { pos: 0, type: VString }
+      ],
       properties: [
         { name: 'type', type: VString, required: false, allowedValues: [
           BlockDefinitionType.BTag,
@@ -67,7 +70,10 @@ class SchemaValidator implements Validator {
 
     {
       name: 'child',
-      id: { required: true },
+      // id: { required: true },
+      parameters: [
+        { pos: 0, type: VString }
+      ],
       properties: [
         { name: 'required', type: VBool, required: false },
         { name: 'multiple', type: VBool, def: 'false', required: false }
@@ -87,13 +93,17 @@ class SchemaValidator implements Validator {
         { name: 'default', type: VAny, required: false }
       ],
       children: [
+        { name: 'meta' },
         { name: 'option' }
       ]
     },
 
     {
       name: 'property',
-      id: { required: true },
+      // id: { required: true },
+      parameters: [
+        { pos: 0, type: VString }
+      ],
       properties: [
         { name: 'type', type: VString, required: false, def: ValueType.VString, allowedValues: [
           ValueType.VString,
@@ -119,9 +129,8 @@ class SchemaValidator implements Validator {
 
     {
       name: 'meta',
-      id: { required: true },
       parameters: [
-        { pos: 1, type: VString }
+        { pos: 0, type: VString }
       ],
       type: BPropertyBag
     }

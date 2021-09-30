@@ -1,46 +1,46 @@
 [schema comic]
 
 [root]
-  [child id=comic] 
+  [child comic] 
     required = true
     multiple = false
-  [child id=paragraph]
-  [child id=page]
+  [child paragraph]
+  [child page]
 
-[block id=comic]
-  [property id=title] 
-    required = true
-  [property id=author]
-    required = true
-  [property id=version]
-    type = Int
-  [property id=date]
-    type = Date
-  [property id=firstPageNumber]
-    type = Int
+[block comic]
+  [property title required=true]
+  [property author required=true]
+  [property version type=Float]
+  [property date type=String]
+  [property firstPageNumber type=Int]
 
-[block id=page]
-  [child id=panel]
-  [child id=notes]
-
-[block id=notes]
+[block notes]
   [id]
-  [child id=paragraph]
-  [child id=list]
+  [child paragraph]
+  [child list]
 
-[block id=panel]
-  [id type = Int required = true]
-  [child id=dialog]
-  [child id=paragraph]
-  [child id=notes]
+[block page]
+  [child panel]
+  [child notes]
 
-[block id=dialog]
-  [property id=character required=true]
-  [property id=modifier]
-  [child id=paragraph]
-  [child id=cont]
+[block panel]
+  [parameter type=Int]
+    [meta schema]
+      description = The panel number.
+      error = Requires a panel number
+  [child dialog]
+  [child paragraph]
+  [child notes]
 
-[block id=cont]
+[block dialog]
+  [parameter type=String]
+    [meta schema]
+      description = The name of the character speaking.
+      error = Requires the name of the character speaking
+  [property modifier]
+  [child paragraph]
+  [child cont]
 
-[block id=paragraph]
-  type = Paragraph
+[block cont]
+
+[block paragraph type=Paragraph]
