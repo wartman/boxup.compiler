@@ -26,7 +26,7 @@ class SchemaValidator implements Validator {
       name: 'root',
       children: [
         { name: 'child' },
-        { name: 'use' },
+        { name: 'extend' },
         { name: 'meta' }
       ]
     },
@@ -42,7 +42,7 @@ class SchemaValidator implements Validator {
     },
 
     {
-      name: 'use',
+      name: 'extend',
       parameters: [
         { pos: 0, type: VString }
       ]
@@ -64,7 +64,7 @@ class SchemaValidator implements Validator {
       ],
       children: [
         { name: 'id', multiple: false },
-        { name: 'use' },
+        { name: 'extend' },
         { name: 'child' },
         { name: 'parameter' },
         { name: 'property' },

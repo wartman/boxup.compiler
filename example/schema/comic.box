@@ -42,5 +42,7 @@
   [child cont]
 
 [block cont]
+  [meta schema]
+    description = Indicates a line should continue in another baloon.
 
 [block paragraph type=Paragraph]

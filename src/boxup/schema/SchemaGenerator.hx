@@ -140,17 +140,17 @@ class SchemaGenerator implements Generator<Schema> {
         required: n.getProperty('required', 'false') == 'true',
         multiple: n.getProperty('multiple', 'true') == 'true'
       }:ChildDefinition));
-    var uses = node.children.filter(n -> n.type.equals(Block(Keyword.KUse, false)));
-    for (reference in uses) {
+    var extensions = node.children.filter(n -> n.type.equals(Block('extend', false)));
+    for (reference in extensions) {
       var name = reference.getParameter(0);
-      var use = root.find(node -> 
+      var target = root.find(node -> 
         node.type.equals(Block('group', false))
         && node.getParameter(0) == name
       );
-      if (use == null) {
+      if (target == null) {
         throw new Error('No group exists with the name "$name"', reference.params[0].pos);
       }
-      children = children.concat(generateChildren(use, root));
+      children = children.concat(generateChildren(target, root));
     }
     return children;
   }

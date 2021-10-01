@@ -14,13 +14,14 @@ function main() {
     content: '
 [schema test]
 
+[/ A "group" is a kind of mixin. Right now it\'s just for children. /]
 [group content]
   [child paragraph]
   [child header]
   [child tester]
 
 [root]
-  [use content]
+  [extend content]
 
 [block header]
   [parameter]
