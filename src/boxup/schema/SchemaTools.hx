@@ -9,6 +9,6 @@ class SchemaTools {
       case Block(Keyword.KUse, _): return Ok(node.getParameter(0));
       default:
     }
-    return Fail(new Error('No schema found', nodes[0].pos));
+    return Fail(new Error(Fatal, 'No schema found', nodes[0].pos));
   }
 }

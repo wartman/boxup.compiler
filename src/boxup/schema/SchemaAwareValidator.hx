@@ -13,7 +13,7 @@ class SchemaAwareValidator implements Validator {
     return nodes
       .findSchema()
       .map(id -> switch schemaCollection.get(id) {
-        case null: Fail(new Error('No schema found', nodes[0].pos));
+        case null: Fail(new Error(Fatal, 'No schema found', nodes[0].pos));
         case schema: Ok(schema);
       })
       .map(schema -> schema.validate(nodes));

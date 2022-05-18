@@ -1,12 +1,13 @@
 package boxup;
 
-import boxup.Node.NodeParam;
+import boxup.Node;
 
 using StringTools;
 using Lambda;
 using boxup.TokenTools;
 
 class Parser {
+  // @todo: Rebuild this so that we don't throw errors?
   public static function parse(tokens):Result<Array<Node>> {
     return try {
       Ok(new Parser(tokens).parseTokens());
@@ -460,6 +461,6 @@ class Parser {
   }
 
   function error(msg:String, pos:Position) {
-    return new Error(msg, pos);
+    return new Error(Fatal, msg, pos);
   }
 }

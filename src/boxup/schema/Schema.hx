@@ -91,17 +91,17 @@ class BlockDefinition {
 
     function validateChild(type:String, isTag:Bool, child:Node):Result<Node> {
       if (!children.exists(c -> c.name == type)) {
-        return Fail(new Error('The block ${type} is an invalid child for ${name}', child.pos));
+        return Fail(new Error(Fatal, 'The block ${type} is an invalid child for ${name}', child.pos));
       }
       var childDef = children.find(c -> c.name == type);
       var blockDef = schema.getBlock(type);
 
       if (childDef == null) {
-        return Fail(new Error('Child not allowed: ${type}', child.pos));
+        return Fail(new Error(Fatal, 'Child not allowed: ${type}', child.pos));
       } else if (blockDef == null) {
-        return Fail(new Error('Unknown block type: ${type}', child.pos));
+        return Fail(new Error(Fatal, 'Unknown block type: ${type}', child.pos));
       } else if (existingChildren.contains(type) && childDef.multiple == false) {
-        return Fail(new Error('Only one ${type} is allowed in ${name}', child.pos));
+        return Fail(new Error(Fatal, 'Only one ${type} is allowed in ${name}', child.pos));
       }
 
       existingChildren.push(type);
@@ -112,7 +112,7 @@ class BlockDefinition {
     function validateParam(param:NodeParam, pos:Int):Result<NodeParam> {
       var paramDef = parameters.find(p -> p.pos == pos);
 
-      if (paramDef == null) return Fail(new Error('Invalid parameter', param.pos));
+      if (paramDef == null) return Fail(new Error(Fatal, 'Invalid parameter', param.pos));
 
       existingParams.push(paramDef.pos);
 
@@ -127,15 +127,15 @@ class BlockDefinition {
       if (propDef == null) switch type {
         case BPropertyBag:
           if (existingProps.contains(prop.id)) {
-            return Fail(new Error('Duplicate property ${prop.id}', prop.pos));
+            return Fail(new Error(Fatal, 'Duplicate property ${prop.id}', prop.pos));
           }
           return Ok(prop);
         default:
-          return Fail(new Error('Invalid property ${prop.id}', prop.pos));
+          return Fail(new Error(Fatal, 'Invalid property ${prop.id}', prop.pos));
       }
 
       if (existingProps.contains(propDef.name)) {
-        return Fail(new Error('Duplicate property ${propDef.name}', prop.pos));
+        return Fail(new Error(Fatal, 'Duplicate property ${propDef.name}', prop.pos));
       }
 
       existingProps.push(propDef.name);
@@ -145,7 +145,7 @@ class BlockDefinition {
 
     if (id != null) {
       if (node.id == null && id.required) {
-        return Fail(new Error('${name} requires an id', node.pos));
+        return Fail(new Error(Fatal, '${name} requires an id', node.pos));
       }
       if (node.id != null) switch id.validate(node.id, node.pos) {
         case Fail(error): return Fail(error);
@@ -153,7 +153,7 @@ class BlockDefinition {
       }
     } else {
       if (node.id != null) {
-        return Fail(new Error('${name} cannot have an id', node.pos));
+        return Fail(new Error(Fatal, '${name} cannot have an id', node.pos));
       }
     }
 
@@ -180,13 +180,13 @@ class BlockDefinition {
           }
         }
         if (para == null) {
-          return Fail(new Error('No Paragraphs are allowed here', child.pos));
+          return Fail(new Error(Fatal, 'No Paragraphs are allowed here', child.pos));
         } else switch validateChild(para.name, para.isTag, child) {
           case Fail(error): return Fail(error);
           case Ok(_):
         }
       case Text if (!isTag && !isParagraph):
-        return Fail(new Error('Invalid child', child.pos));
+        return Fail(new Error(Fatal, 'Invalid child', child.pos));
       case Text:
         // ?
     }
@@ -203,19 +203,19 @@ class BlockDefinition {
         } else {
           'Requires a ${def.type} parameter at position ${def.pos}.';
         }
-        return Fail(new Error(msg, node.pos));
+        return Fail(new Error(Fatal, msg, node.pos));
       }
     }
     
     for (def in properties) {
       if (def.required && !existingProps.contains(def.name)) {
-        return Fail(new Error('Requires property ${def.name}', node.pos));
+        return Fail(new Error(Fatal, 'Requires property ${def.name}', node.pos));
       }
     }
 
     for (child in children) {
       if (child.required && !existingChildren.contains(child.name)) {
-        return Fail(new Error('Requires a ${child.name} block', node.pos));
+        return Fail(new Error(Fatal, 'Requires a ${child.name} block', node.pos));
       }
     }
 
@@ -235,27 +235,27 @@ private function checkType(value:String, type:ValueType, pos:Position):Result<St
   return switch type {
     case VBool: switch value {
       case 'true' | 'false': Ok(value);
-      default: Fail(new Error('Expected a Bool', pos));
+      default: Fail(new Error(Fatal, 'Expected a Bool', pos));
     }
     case VString:
       Ok(value);
       // if (isAlpha(value.charAt(0))) {
       //   Ok(value);
       // } else {
-      //   Fail(new Error('Expected a string', pos));
+      //   Fail(new Error(Fatal, 'Expected a string', pos));
       // }
     case VAny: 
       Ok(value);
     case VInt: 
       for (i in 0...value.length) if (!isDigit(value.charAt(i))) {
-        return Fail(new Error('Expected an Int', pos));
+        return Fail(new Error(Fatal, 'Expected an Int', pos));
       }
       Ok(value);
     case VFloat: try { 
       @:keep Std.parseFloat(value);
       Ok(value); 
     } catch (e) {
-      Fail(new Error('Expected a Float', pos));
+      Fail(new Error(Fatal, 'Expected a Float', pos));
     }
   }
 }
@@ -308,7 +308,7 @@ class ParameterDefinition {
 
     if (allowedValues.length > 0) {
       if (!allowedValues.contains(value)) {
-        return Fail(new Error('Must be one of ${allowedValues.join(', ')}', param.pos));
+        return Fail(new Error(Fatal, 'Must be one of ${allowedValues.join(', ')}', param.pos));
       }
     }
 
@@ -336,7 +336,7 @@ class PropertyDefinition {
 
     if (allowedValues.length > 0) {
       if (!allowedValues.contains(value)) {
-        return Fail(new Error('Must be one of ${allowedValues.join(', ')}', child.pos));
+        return Fail(new Error(Fatal, 'Must be one of ${allowedValues.join(', ')}', child.pos));
       }
     }
 

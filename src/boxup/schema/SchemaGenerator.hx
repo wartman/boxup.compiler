@@ -148,7 +148,7 @@ class SchemaGenerator implements Generator<Schema> {
         && node.getParameter(0) == name
       );
       if (target == null) {
-        throw new Error('No group exists with the name "$name"', reference.params[0].pos);
+        throw new Error(Fatal, 'No group exists with the name "$name"', reference.params[0].pos);
       }
       children = children.concat(generateChildren(target, root));
     }

@@ -134,7 +134,7 @@ class Scanner {
   }
 
   function error(msg:String, min:Int, max:Int) {
-    return new Error(msg, {
+    return new Error(Fatal, msg, {
       min: min,
       max: max,
       file: source.file
