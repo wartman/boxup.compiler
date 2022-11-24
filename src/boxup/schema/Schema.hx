@@ -7,6 +7,10 @@ import boxup.Builtin;
 using Lambda;
 
 class Schema implements Validator {
+  public static macro function create(expr) {
+    return boxup.macro.SchemaBuilder.create(expr);
+  }
+
   public final id:SchemaId;
   final blocks:Array<BlockDefinition>;
   final meta:Map<String, String>;
@@ -17,8 +21,16 @@ class Schema implements Validator {
     this.meta = meta;
   }
 
+  public function getBlocks() {
+    return blocks;
+  }
+
   public function getBlock(name:String) {
     return blocks.find(b -> b.name == name);
+  }
+
+  public function getAllMeta() {
+    return meta;
   }
 
   public function getMeta(name:String, ?def:String) {
