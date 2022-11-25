@@ -56,11 +56,20 @@ function generateBlock(block:BlockDefinition):Expr {
     name: $v{block.name},
     meta: ${generateMeta(block.meta)},
     type: $v{block.type},
-    id: $v{block.id},
+    id: ${generateId(block.id)},
     parameters: ${generateParameters(block.parameters)},
     properties: ${generateProperties(block.properties)},
     children: ${generateChildren(block.children)}
   }:boxup.schema.Schema.BlockDefinition);
+}
+
+function generateId(id:Null<IdDefintion>) {
+  if (id == null) return macro null;
+  return macro ({
+    required: $v{id.required},
+    type: $v{id.type},
+    parameter: $v{id.parameter}
+  }:boxup.schema.Schema.IdDefintion);
 }
 
 function generateMeta(metadata:Map<String, String>):Expr {
