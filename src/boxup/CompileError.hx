@@ -5,7 +5,7 @@ enum ErrorType {
   Fatal;
 }
 
-class Error {
+class CompileError {
   public final type:ErrorType;
   public final pos:Position;
   public final message:String;

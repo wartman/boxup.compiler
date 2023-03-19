@@ -1,0 +1,4 @@
+# @install: lix --silent download "gh://github.com/wartman/kit.spec#f5cf1d03ea983026f829c8e9ba75f51ec1ee0240" into kit.spec/0.0.0/github/f5cf1d03ea983026f829c8e9ba75f51ec1ee0240
+-lib kit
+-cp ${HAXE_LIBCACHE}/kit.spec/0.0.0/github/f5cf1d03ea983026f829c8e9ba75f51ec1ee0240/src
+-D kit.spec=0.0.0

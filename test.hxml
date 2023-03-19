@@ -1,6 +1,7 @@
 -cp src
 -cp test
 
+-lib kit
 -lib hxnodejs
 
 -dce full

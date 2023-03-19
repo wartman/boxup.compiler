@@ -3,9 +3,11 @@
   "description": "Simple, structured markup.",
   "classPath": "src/",
   "contributors": [ "wartman" ],
-  "dependencies": {},
+  "dependencies": {
+    "kit": "0.0.1"
+  },
   "url": "https://github.com/wartman/boxup.compiler.git",
   "license": "MIT",
   "releasenote": "Initial Release",
-  "version": "0.0.1-alpha.1"
+  "version": "0.0.1-alpha.1",
 }
