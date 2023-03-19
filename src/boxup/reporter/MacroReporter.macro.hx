@@ -19,10 +19,8 @@ class MacroReporter implements Reporter {
       return;
     }
 
-    // @todo: no idea why the +2 is needed here, but it works.
-    // I'd really like to figure out why.
-    var min = realPosition.min + error.pos.min + 2;
-    var max = realPosition.min + error.pos.max + 2;
+    var min = realPosition.min + error.pos.min + 1;
+    var max = realPosition.min + error.pos.max + 1;
 
     var pos = Context.makePosition({
       min: min,
