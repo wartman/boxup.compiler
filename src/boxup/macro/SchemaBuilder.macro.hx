@@ -27,10 +27,7 @@ function create(expr:Expr):Expr {
 		file: posInfo.file
 	});
 	var compiler = new SchemaCompiler(reporter);
-	return compiler.compile(source).map(schema -> {
-		var out = generateSchema(schema);
-		return macro $out;
-	}).or(() -> macro null);
+	return compiler.compile(source).map(generateSchema).or(() -> macro null);
 }
 
 function generateSchema(schema:Schema):Expr {
