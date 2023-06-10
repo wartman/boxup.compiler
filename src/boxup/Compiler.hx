@@ -24,7 +24,7 @@ class Compiler<T> {
 					reporter.report(error, source);
 					activate(Error(error));
 				case Ok(nodes):
-					generator.generate(nodes).handle(result -> {
+					generator.generate(source, nodes).handle(result -> {
 						switch result {
 							case Error(error): reporter.report(error, source);
 							default:

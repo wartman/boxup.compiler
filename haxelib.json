@@ -4,7 +4,7 @@
   "classPath": "src/",
   "contributors": [ "wartman" ],
   "dependencies": {
-    "kit": "0.0.1"
+    "kit": "0.0.1-alpha.2"
   },
   "url": "https://github.com/wartman/boxup.compiler.git",
   "license": "MIT",
