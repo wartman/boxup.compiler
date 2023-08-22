@@ -80,7 +80,7 @@ class BlockDefinition {
 	public final name:String;
 	public final meta:Map<String, String> = [];
 	public final type:BlockDefinitionType = BNormal;
-	public final id:Null<IdDefintion> = null;
+	public final id:Null<IdDefinition> = null;
 	public final parameters:Array<ParameterDefinition> = [];
 	public final properties:Array<PropertyDefinition> = [];
 	public final children:Array<ChildDefinition> = [];
@@ -285,7 +285,7 @@ function isAlpha(c:String):Bool {
 }
 
 @:structInit
-class IdDefintion {
+class IdDefinition {
 	public final required:Bool = false;
 	public final type:ValueType = VString;
 	public final parameter:Int = 0;

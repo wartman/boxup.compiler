@@ -1,5 +1,6 @@
 package boxup.schema;
 
+import boxup.loader.Loader;
 import haxe.ds.Map;
 import boxup.Builtin;
 import boxup.schema.Schema;
@@ -35,7 +36,11 @@ class SchemaGenerator {
 		}
 	];
 
-	public function new() {}
+	final loader:Null<(id:String) -> Result<Schema, CompileError>>;
+
+	public function new(?loader) {
+		this.loader = loader;
+	}
 
 	public function generate(nodes:Array<Node>):Result<Schema, CompileError> {
 		var blocks:Array<BlockDefinition> = [].concat(defaultBlocks);
@@ -49,6 +54,12 @@ class SchemaGenerator {
 			case Block(Keyword.KSchema, _):
 				if (node.getParameter(0) != null) id = node.getParameter(0);
 				meta = generateMeta(node);
+				switch generateUses(node) {
+					case Ok(value):
+						blocks = blocks.concat(value.filter(block -> block.name != BRoot));
+					case Error(error):
+						return Error(error);
+				}
 			case Block('root', false):
 				blocks.push({
 					name: BRoot,
@@ -134,5 +145,21 @@ class SchemaGenerator {
 			children = children.concat(generateChildren(target, root));
 		}
 		return children;
+	}
+
+	function generateUses(node:Node):Result<Array<BlockDefinition>, CompileError> {
+		var uses = node.children.filter(n -> n.type.equals(Block('use', false)));
+		var results:Array<BlockDefinition> = [];
+		for (node in uses) switch loadChildSchema(node.getParameter(0), node.pos) {
+			case Ok(value): results = results.concat(value);
+			case Error(error): return Error(error);
+		}
+		return Ok(results);
+	}
+
+	function loadChildSchema(id:String, pos:Position):Result<Array<BlockDefinition>, CompileError> {
+		if (loader == null) return Error(new CompileError(Fatal, 'No loader found',
+			'The `[uses ...]` feature is only available if you have a SchemaLoader provided to your SchemaCompiler.', pos));
+		return loader(id).map(schema -> schema.getBlocks());
 	}
 }

@@ -328,7 +328,7 @@ class Parser {
 	}
 
 	function checkIdentifier() {
-		return checkTokenValue(peek(), isAlphaNumeric) || check(TokUnderline) || checkTokenValue(peek(), c -> c == '-' || c == '.');
+		return checkTokenValue(peek(), isAlphaNumeric) || check(TokUnderline) || check(TokDot) || check(TokDash);
 	}
 
 	function findIndentWithoutNewline() {

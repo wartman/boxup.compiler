@@ -46,6 +46,8 @@ class Scanner {
 			case '`': createToken(TokRaw);
 			case '"': createToken(TokDoubleQuote);
 			case "'": createToken(TokSingleQuote);
+			case '.': createToken(TokDot);
+			case '-': createToken(TokDash);
 			case r:
 				{
 					type: TokText,

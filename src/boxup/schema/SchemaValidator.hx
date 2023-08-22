@@ -16,6 +16,11 @@ class SchemaValidator implements Validator {
 		},
 		{
 			name: 'schema',
+			parameters: [{pos: 0, type: VString}],
+			children: [{name: 'use', required: false, multiple: true}]
+		},
+		{
+			name: 'use',
 			parameters: [{pos: 0, type: VString}]
 		},
 		{

@@ -2,7 +2,7 @@ package boxup.schema;
 
 using boxup.schema.SchemaTools;
 
-class SchemaAwareValidator implements Validator {
+class SchemaPreLoadedValidator implements Validator {
 	final schemaCollection:SchemaCollection;
 
 	public function new(schemaCollection) {

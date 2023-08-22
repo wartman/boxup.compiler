@@ -9,6 +9,8 @@ enum abstract TokenType(String) to String {
 	var TokUnderline = '_';
 	var TokRaw = '`';
 	var TokEquals = '=';
+	var TokDot = '.';
+	var TokDash = '-';
 	var TokWhitespace = '<whitespace>';
 	var TokText = '<text>';
 	var TokNewline = '<newline>';

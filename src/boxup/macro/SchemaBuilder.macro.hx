@@ -55,13 +55,13 @@ function generateBlock(block:BlockDefinition):Expr {
 	} : boxup.schema.Schema.BlockDefinition);
 }
 
-function generateId(id:Null<IdDefintion>) {
+function generateId(id:Null<IdDefinition>) {
 	if (id == null) return macro null;
 	return macro({
 		required: $v{id.required},
 		type: $v{id.type},
 		parameter: $v{id.parameter}
-	} : boxup.schema.Schema.IdDefintion);
+	} : boxup.schema.Schema.IdDefinition);
 }
 
 function generateMeta(metadata:Map<String, String>):Expr {

@@ -1,0 +1,20 @@
+[schema root]
+  [use core.paragraph]
+
+[root]
+  [child paragraph]
+  [child header]
+  [child tester]
+
+[block header]
+  [parameter]
+    [meta schema error="Requires a title"]
+  [parameter type = Int]
+    [meta schema error="Requires a priority number"]
+  [property type]
+
+[block tester]
+  [property foo]
+    [option value = bar]
+    [option value = foo]
+  [child paragraph]

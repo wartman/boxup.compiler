@@ -1,0 +1,10 @@
+[schema core.paragraph]
+
+[root]
+  [child paragraph multiple=true]
+
+[block paragraph type=Paragraph]
+  [child link]
+
+[block link type=Tag]
+  [property href required = true]
