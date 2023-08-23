@@ -17,7 +17,7 @@ Boxup is a markup language, designed for situations where Markdown doesn't provi
  / It can be used to tell the compiler which schema to use (although
  / this is an implementation detail)
  /]
-[use example]
+[use my.example]
 
 [article]
   title = Hello world!
@@ -43,21 +43,17 @@ Boxup is a markup language, designed for situations where Markdown doesn't provi
 [/ A possible schema for the above: /]
 
 [/ The `schema` keyword optionally names the schema. /]
-[schema example]
+[schema my.example]
+  [/ You can import other schemas into this one via the `use` block. 
+   / Note that `[use]` blocks in schemas must be children of the 
+   / `[schema]` block.
+   /]
+  [use my.paragraph]
 
 [root]
   [child article required = true]
   [child section]
   [child paragraph]
-
-[block paragraph]
-  [/ Properties do not need to be defined in the block header: /]
-  type = Paragraph
-  [child example]
-
-[block example type=Tag]
-  [property content]
-    required = true
 
 [block article]
   [property title required=true]
@@ -81,4 +77,24 @@ Boxup is a markup language, designed for situations where Markdown doesn't provi
 
 [block header]
   [child paragraph required = true]
+```
+
+```boxup
+[schema my.paragraph]
+
+[/ The `[root]` declaration is ignored when being imported. /]
+[root]
+  [child paragraph]
+
+[/ When used by another schema, all the block definitions here will become
+ / available in the parent file. 
+ /]
+[block paragraph]
+  [/ Properties do not need to be defined in the block header: /]
+  type = Paragraph
+  [child example]
+
+[block example type=Tag]
+  [property content]
+    required = true
 ```

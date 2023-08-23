@@ -21,7 +21,9 @@ class FileSystemLoader implements Loader {
 
 	function getFileSync(id:String):Result<Source, CompileError> {
 		var path = Path.join([root].concat(id.split('.'))).withExtension('box');
-		var content = path.getContent();
+		var content = try path.getContent() catch (e) {
+			return Error(new CompileError(Fatal, 'Source not found: $id', e.message));
+		}
 		var source:Source = {file: path, content: content};
 		return Ok(source);
 	}

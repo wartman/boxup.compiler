@@ -1,5 +1,6 @@
 package boxup.macro;
 
+import boxup.loader.*;
 import haxe.macro.Context;
 import haxe.macro.Expr;
 import boxup.schema.Schema;
@@ -26,7 +27,7 @@ function create(expr:Expr):Expr {
 		max: posInfo.max,
 		file: posInfo.file
 	});
-	var compiler = new SchemaCompiler(reporter);
+	var compiler = new SchemaCompiler(reporter, new StaticLoader([]));
 	return compiler.compile(source).map(generateSchema).or(() -> macro null);
 }
 

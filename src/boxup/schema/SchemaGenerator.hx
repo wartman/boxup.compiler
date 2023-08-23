@@ -36,10 +36,10 @@ class SchemaGenerator {
 		}
 	];
 
-	final loader:Null<(id:String) -> Result<Schema, CompileError>>;
+	final loadSource:(id:String) -> Result<Schema, CompileError>;
 
-	public function new(?loader) {
-		this.loader = loader;
+	public function new(loadSource) {
+		this.loadSource = loadSource;
 	}
 
 	public function generate(nodes:Array<Node>):Result<Schema, CompileError> {
@@ -158,8 +158,8 @@ class SchemaGenerator {
 	}
 
 	function loadChildSchema(id:String, pos:Position):Result<Array<BlockDefinition>, CompileError> {
-		if (loader == null) return Error(new CompileError(Fatal, 'No loader found',
-			'The `[uses ...]` feature is only available if you have a SchemaLoader provided to your SchemaCompiler.', pos));
-		return loader(id).map(schema -> schema.getBlocks());
+		return loadSource(id).map(schema -> schema.getBlocks()).mapError(_ -> {
+			new CompileError(Fatal, 'Could not load $id', pos);
+		});
 	}
 }

@@ -135,7 +135,7 @@ class SchemaValidator implements Validator {
 				{name: 'required', type: VBool, required: false},
 				{name: 'default', type: VAny, required: false}
 			],
-			children: [{name: 'option'}]
+			children: [{name: 'meta'}, {name: 'option'}]
 		},
 		{
 			name: 'option',

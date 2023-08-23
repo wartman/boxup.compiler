@@ -22,6 +22,7 @@ class VisualReporter implements Reporter {
 		var pos = e.pos;
 		var min = pos.min;
 		var max = pos.max;
+		var file = pos?.file ?? source.file;
 		var padding = 0;
 
 		while (min > 0) {

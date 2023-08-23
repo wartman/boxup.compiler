@@ -1,4 +1,4 @@
-[schema core.paragraph]
+[schema schema.core.paragraph]
 
 [root]
   [child paragraph multiple=true]
