@@ -1,9 +1,12 @@
 [schema schema.core.paragraph]
 
 [root]
-  [child paragraph multiple=true]
+  [child default-paragraph multiple=true]
 
-[block paragraph type=Paragraph]
+[/ `[paragraph ...]` is just a convenience wrapper 
+ / for `[block ... type=Paragraph]` 
+ /]
+[paragraph default-paragraph]
   [child link]
 
 [block link type=Tag]

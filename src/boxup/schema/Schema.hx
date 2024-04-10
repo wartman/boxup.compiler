@@ -178,7 +178,7 @@ class BlockDefinition {
 					}
 				}
 				if (para == null) {
-					return Error(new CompileError('No Paragraphs are allowed here', child.pos));
+					return Error(new CompileError('Paragraphs are not allowed in this block', child.pos));
 				} else
 					switch validateChild(para.name, para.isTag, child) {
 						case Error(error): return Error(error);

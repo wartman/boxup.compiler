@@ -2,7 +2,7 @@
   [use schema.core.paragraph]
 
 [root]
-  [child paragraph]
+  [child default-paragraph]
   [child header]
   [child tester]
 
@@ -17,4 +17,4 @@
   [property foo]
     [option value=bar]
     [option value=foo]
-  [child paragraph]
+  [child default-paragraph]

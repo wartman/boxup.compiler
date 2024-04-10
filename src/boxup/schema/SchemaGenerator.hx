@@ -67,7 +67,6 @@ class SchemaGenerator {
 				});
 			case Block('block', false):
 				var type:BlockDefinitionType = node.getProperty('type', BlockDefinitionType.BNormal);
-				var id = node.children.find(n -> n.type.equals(Block('id', false)));
 				blocks.push({
 					name: node.getParameter(0),
 					type: type,
@@ -80,6 +79,13 @@ class SchemaGenerator {
 						default:
 							generateChildren(node, nodes);
 					}
+				});
+			case Block('paragraph', false):
+				blocks.push({
+					name: node.getParameter(0),
+					type: BParagraph,
+					meta: generateMeta(node),
+					children: defaultParagraphChildren.concat(generateChildren(node, nodes))
 				});
 			default:
 		}
