@@ -1,24 +1,18 @@
 package boxup;
 
-enum ErrorType {
-  Warning;
-  Fatal;
-}
+import haxe.Exception;
 
-class CompileError {
-  public final type:ErrorType;
-  public final pos:Position;
-  public final message:String;
-  public final detailedMessage:Null<String> = null;
+class CompileError extends Exception {
+	public final pos:Position;
+	public final detailedMessage:Null<String>;
 
-  public function new(type, message, ?detailedMessage, ?pos) {
-    this.type = type;
-    this.message = message;
-    this.detailedMessage = detailedMessage;
-    this.pos = pos != null ? pos : Position.unknown();
-  }
+	public function new(message, ?detailedMessage, ?pos) {
+		super(message);
+		this.detailedMessage = detailedMessage;
+		this.pos = pos != null ? pos : Position.unknown();
+	}
 
-  public function toString() {
-    return '${message} : ${pos.file} ${pos.min} ${pos.max}';
-  }
+	override function toString() {
+		return '${super.toString()} : ${pos.file} ${pos.min} ${pos.max}';
+	}
 }

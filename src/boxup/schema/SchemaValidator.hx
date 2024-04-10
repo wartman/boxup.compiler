@@ -63,28 +63,8 @@ class SchemaValidator implements Validator {
 			]
 		},
 		{
-			name: 'id',
-			properties: [
-				{name: 'required', type: VBool, required: false},
-				{
-					name: 'type',
-					type: VString,
-					required: false,
-					def: ValueType.VString,
-					allowedValues: [
-						ValueType.VString,
-						ValueType.VAny,
-						ValueType.VInt,
-						ValueType.VFloat,
-						ValueType.VBool
-					]
-				},
-				{name: 'parameter', type: VInt, required: false}
-			]
-		},
-		{
 			name: 'child',
-			parameters: [{pos: 0, type: VString}],
+			parameters: [{name: 'name', pos: 0, type: VString}],
 			properties: [
 				{name: 'required', type: VBool, required: false},
 				{
@@ -97,6 +77,7 @@ class SchemaValidator implements Validator {
 		},
 		{
 			name: 'parameter',
+			parameters: [{name: 'name', pos: 0, type: VString}],
 			properties: [
 				{
 					name: 'type',

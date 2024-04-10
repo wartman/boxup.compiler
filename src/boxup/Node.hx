@@ -4,55 +4,58 @@ using Lambda;
 
 enum NodeType {
 	Block(type:String, ?isTag:Bool);
-	Property;
+	Parameter(pos:Int);
+	Property(name:String);
 	Paragraph;
 	Text;
-}
-
-typedef NodeParam = {
-	public final pos:Position;
-	public final value:String;
 }
 
 @:structInit
 class Node {
 	public var type:NodeType;
 	public var pos:Position;
-	public var id:Null<String> = null;
-	public var textContent:Null<String> = null;
-	public var params:Array<NodeParam> = [];
 	public var children:Array<Node> = [];
+	public var textContent:Null<String> = null;
 
 	public function getProperty(name:String, def:String = null):String {
-		for (c in children) switch c.type {
-			case Property if (c.id == name):
-				var data = c.children.find(n -> n.type.equals(Text));
-				return if (data != null && data.textContent != null)
-					data.textContent;
-				else
-					def;
+		for (child in children) switch child.type {
+			case Property(propertyName) if (propertyName == name):
+				return child.getValue() ?? def;
 			default:
 		}
 		return def;
 	}
 
 	public function getParameter(pos:Int, def:String = null):String {
-		var param = params[pos];
-		if (param == null) return def;
-		return param.value;
+		for (child in children) switch child.type {
+			case Parameter(parameterPos) if (parameterPos == pos):
+				return child.getValue() ?? def;
+			default:
+		}
+		return def;
+	}
+
+	public function getValue():Null<String> {
+		return children.find(child -> child.type.equals(Text))?.textContent;
 	}
 
 	public function toJson():Dynamic {
 		return {
 			type: switch type {
-				case Block(type, _): '@Block:$type';
-				case Property: '@Property';
-				case Paragraph: '@Paragraph';
-				case Text: '@Text';
+				case Block(type, _): 'Block';
+				case Property(name): 'Property';
+				case Parameter(pos): 'Parameter';
+				case Paragraph: 'Paragraph';
+				case Text: 'Text';
 			},
-			id: id,
+			id: switch type {
+				case Block(type, _): type;
+				case Property(name): name;
+				case Parameter(pos): Std.string(pos);
+				case Paragraph: null;
+				case Text: null;
+			},
 			textContent: textContent,
-			params: params.map(p -> p.value),
 			children: children.map(c -> c.toJson())
 		};
 	}

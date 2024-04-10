@@ -1,7 +1,5 @@
 package boxup;
 
-import boxup.Node.NodeParam;
-
 using Lambda;
 using StringTools;
 using boxup.TokenTools;
@@ -46,11 +44,11 @@ class Parser {
 
 		var type = identifier();
 		var children:Array<Node> = [];
+		var paramsIndex = 0;
 		var paramsAllowed = true;
-		var params:Array<NodeParam> = [];
 
 		if (type == null) {
-			return Error(new CompileError(Fatal, 'Expected a block type', peek().pos));
+			return Error(new CompileError('Expected a block type', peek().pos));
 		}
 
 		ignoreWhitespace();
@@ -58,8 +56,8 @@ class Parser {
 		while (!check(TokCloseBracket) && !isAtEnd()) {
 			ignoreWhitespaceAndNewline();
 			if (!checkProperty() && paramsAllowed) {
-				switch parseParameter() {
-					case Ok(value): params.push(value);
+				switch parseParameter(paramsIndex++) {
+					case Ok(value): children.push(value);
 					case Error(error): return Error(error);
 				}
 			} else {
@@ -109,12 +107,8 @@ class Parser {
 			}
 		}
 
-		var id = children.find(child -> child.id == Keyword.KId);
-
 		return Ok({
 			type: Block(type.value, isTag),
-			params: params,
-			id: id != null ? id.children[0].textContent : null,
 			children: children,
 			pos: type.pos
 		});
@@ -237,7 +231,7 @@ class Parser {
 		});
 	}
 
-	function parseParameter():Result<NodeParam, CompileError> {
+	function parseParameter(index:Int):Result<Node, CompileError> {
 		var value = if (checkIdentifier()) {
 			identifier();
 		} else switch parseValue() {
@@ -246,15 +240,22 @@ class Parser {
 		}
 
 		return Ok({
+			type: Parameter(index),
 			pos: value.pos,
-			value: value.value
+			children: [
+				{
+					type: Text,
+					textContent: value.value,
+					pos: value.pos
+				}
+			]
 		});
 	}
 
 	function parseProperty(value:() -> Result<Maybe<Token>, CompileError>):Result<Node, CompileError> {
 		var id = identifier();
 		if (id == null) {
-			return Error(new CompileError(Fatal, 'Expected an identifier', peek().pos));
+			return Error(new CompileError('Expected an identifier', peek().pos));
 		}
 
 		ignoreWhitespace();
@@ -268,11 +269,10 @@ class Parser {
 			case Error(error):
 				Error(error);
 			case Ok(None):
-				Error(new CompileError(Fatal, 'Expected a value', peek().pos));
+				Error(new CompileError('Expected a value', peek().pos));
 			case Ok(Some(value)):
 				Ok({
-					type: Property,
-					id: id.value,
+					type: Property(id.value),
 					pos: id.pos,
 					children: [
 						{
@@ -301,7 +301,7 @@ class Parser {
 		var out = readWhile(() -> !check(delimiter)).merge();
 
 		if (isAtEnd()) {
-			return Error(new CompileError(Fatal, 'Unterminated string', out.pos));
+			return Error(new CompileError('Unterminated string', out.pos));
 		}
 
 		return consume(delimiter).map(_ -> out);
@@ -435,7 +435,7 @@ class Parser {
 	}
 
 	function consume(type:TokenType):Result<Nothing, CompileError> {
-		if (!match(type)) return Error(new CompileError(Fatal, 'Expected a ${type}', peek().pos));
+		if (!match(type)) return Error(new CompileError('Expected a ${type}', peek().pos));
 		return Ok(Nothing);
 	}
 

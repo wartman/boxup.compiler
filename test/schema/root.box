@@ -7,16 +7,13 @@
   [child tester]
 
 [block header]
-  [parameter]
-    [meta schema]
-      info = "The title of the header"
-      error = "Requires a title"
-  [parameter type=Int]
+  [parameter title]
+  [parameter priority type=Int]
     [meta schema error="Requires a priority number"]
   [property type]
 
 [block tester]
-  [id required=true]
+  [property id required=true]
   [property foo]
     [option value=bar]
     [option value=foo]

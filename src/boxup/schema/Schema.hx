@@ -1,6 +1,5 @@
 package boxup.schema;
 
-import boxup.Node.NodeParam;
 import haxe.ds.Map;
 import boxup.Builtin;
 
@@ -80,7 +79,6 @@ class BlockDefinition {
 	public final name:String;
 	public final meta:Map<String, String> = [];
 	public final type:BlockDefinitionType = BNormal;
-	public final id:Null<IdDefinition> = null;
 	public final parameters:Array<ParameterDefinition> = [];
 	public final properties:Array<PropertyDefinition> = [];
 	public final children:Array<ChildDefinition> = [];
@@ -104,17 +102,17 @@ class BlockDefinition {
 
 		function validateChild(type:String, isTag:Bool, child:Node):Result<Node, CompileError> {
 			if (!children.exists(c -> c.name == type)) {
-				return Error(new CompileError(Fatal, 'The block ${type} is an invalid child for ${name}', child.pos));
+				return Error(new CompileError('The block ${type} is an invalid child for ${name}', child.pos));
 			}
 			var childDef = children.find(c -> c.name == type);
 			var blockDef = schema.getBlock(type);
 
 			if (childDef == null) {
-				return Error(new CompileError(Fatal, 'Child not allowed: ${type}', child.pos));
+				return Error(new CompileError('Child not allowed: ${type}', child.pos));
 			} else if (blockDef == null) {
-				return Error(new CompileError(Fatal, 'Unknown block type: ${type}', child.pos));
+				return Error(new CompileError('Unknown block type: ${type}', child.pos));
 			} else if (existingChildren.contains(type) && childDef.multiple == false) {
-				return Error(new CompileError(Fatal, 'Only one ${type} is allowed in ${name}', child.pos));
+				return Error(new CompileError('Only one ${type} is allowed in ${name}', child.pos));
 			}
 
 			existingChildren.push(type);
@@ -122,52 +120,36 @@ class BlockDefinition {
 			return blockDef.validate(child, schema);
 		}
 
-		function validateParam(param:NodeParam, pos:Int):Result<NodeParam, CompileError> {
+		function validateParam(param:Node, pos:Int):Result<Node, CompileError> {
 			var paramDef = parameters.find(p -> p.pos == pos);
 
-			if (paramDef == null) return Error(new CompileError(Fatal, 'Invalid parameter', param.pos));
+			if (paramDef == null) return Error(new CompileError('Invalid parameter', param.pos));
 
 			existingParams.push(paramDef.pos);
 
 			return paramDef.validate(param);
 		}
 
-		function validateProp(prop:Node):Result<Node, CompileError> {
-			if (prop.id == Keyword.KId) return Ok(prop);
-
-			var propDef = properties.find(p -> p.name == prop.id);
+		function validateProp(name:String, prop:Node):Result<Node, CompileError> {
+			var propDef = properties.find(p -> p.name == name);
 
 			if (propDef == null) switch type {
 				case BPropertyBag:
-					if (existingProps.contains(prop.id)) {
-						return Error(new CompileError(Fatal, 'Duplicate property ${prop.id}', prop.pos));
+					if (existingProps.contains(name)) {
+						return Error(new CompileError('Duplicate property ${name}', prop.pos));
 					}
 					return Ok(prop);
 				default:
-					return Error(new CompileError(Fatal, 'Invalid property ${prop.id}', prop.pos));
+					return Error(new CompileError('Invalid property ${name}', prop.pos));
 			}
 
 			if (existingProps.contains(propDef.name)) {
-				return Error(new CompileError(Fatal, 'Duplicate property ${propDef.name}', prop.pos));
+				return Error(new CompileError('Duplicate property ${propDef.name}', prop.pos));
 			}
 
 			existingProps.push(propDef.name);
 
 			return propDef.validate(prop);
-		}
-
-		if (id != null) {
-			if (node.id == null && id.required) {
-				return Error(new CompileError(Fatal, '${name} requires an id', node.pos));
-			}
-			if (node.id != null) switch id.validate(node.id, node.pos) {
-				case Error(error): return Error(error);
-				case Ok(_):
-			}
-		} else {
-			if (node.id != null) {
-				return Error(new CompileError(Fatal, '${name} cannot have an id', node.pos));
-			}
 		}
 
 		if (type != BDynamicChildren) for (child in node.children) switch child.type {
@@ -176,12 +158,13 @@ class BlockDefinition {
 					case Error(error): return Error(error);
 					case Ok(_):
 				}
-			// case Parameter(pos): switch  validateParam(child, pos) {
-			//   case Error(error): return Error(error);
-			//   case Ok(_):
-			// }
-			case Property:
-				switch validateProp(child) {
+			case Parameter(pos):
+				switch validateParam(child, pos) {
+					case Error(error): return Error(error);
+					case Ok(_):
+				}
+			case Property(name):
+				switch validateProp(name, child) {
 					case Error(error): return Error(error);
 					case Ok(_):
 				}
@@ -195,43 +178,39 @@ class BlockDefinition {
 					}
 				}
 				if (para == null) {
-					return Error(new CompileError(Fatal, 'No Paragraphs are allowed here', child.pos));
+					return Error(new CompileError('No Paragraphs are allowed here', child.pos));
 				} else
 					switch validateChild(para.name, para.isTag, child) {
 						case Error(error): return Error(error);
 						case Ok(_):
 					}
 			case Text if (!isTag && !isParagraph):
-				return Error(new CompileError(Fatal, 'Invalid child', child.pos));
+				return Error(new CompileError('Invalid child', child.pos));
 			case Text:
 				// ?
 		}
 
-		for (i in 0...node.params.length) switch validateParam(node.params[i], i) {
-			case Error(error): return Error(error);
-			case Ok(_):
-		}
-
+		// @todo: Allow parameters to be optional
 		for (def in parameters) {
 			if (!existingParams.contains(def.pos)) {
 				var msg = if (def.meta.exists('schema.error')) {
-					def.meta.get('schema.error') + ' at position ${def.pos}.';
+					def.meta.get('schema.error');
 				} else {
-					'Requires a ${def.type} parameter at position ${def.pos}.';
+					'Requires parameter ${def.name}';
 				}
-				return Error(new CompileError(Fatal, msg, node.pos));
+				return Error(new CompileError(msg, node.pos));
 			}
 		}
 
 		for (def in properties) {
 			if (def.required && !existingProps.contains(def.name)) {
-				return Error(new CompileError(Fatal, 'Requires property ${def.name}', node.pos));
+				return Error(new CompileError('Requires property ${def.name}', node.pos));
 			}
 		}
 
 		for (child in children) {
 			if (child.required && !existingChildren.contains(child.name)) {
-				return Error(new CompileError(Fatal, 'Requires a ${child.name} block', node.pos));
+				return Error(new CompileError('Requires a ${child.name} block', node.pos));
 			}
 		}
 
@@ -251,27 +230,27 @@ private function checkType(value:String, type:ValueType, pos:Position):Result<St
 	return switch type {
 		case VBool: switch value {
 				case 'true' | 'false': Ok(value);
-				default: Error(new CompileError(Fatal, 'Expected a Bool', pos));
+				default: Error(new CompileError('Expected a Bool', pos));
 			}
 		case VString:
 			Ok(value);
 		// if (isAlpha(value.charAt(0))) {
 		//   Ok(value);
 		// } else {
-		//   Error(new CompileError(Fatal, 'Expected a string', pos));
+		//   Error(new CompileError('Expected a string', pos));
 		// }
 		case VAny:
 			Ok(value);
 		case VInt:
 			for (i in 0...value.length) if (!isDigit(value.charAt(i))) {
-				return Error(new CompileError(Fatal, 'Expected an Int', pos));
+				return Error(new CompileError('Expected an Int', pos));
 			}
 			Ok(value);
 		case VFloat: try {
 				@:keep Std.parseFloat(value);
 				Ok(value);
 			} catch (e) {
-				Error(new CompileError(Fatal, 'Expected a Float', pos));
+				Error(new CompileError('Expected a Float', pos));
 			}
 	}
 }
@@ -285,17 +264,6 @@ function isAlpha(c:String):Bool {
 }
 
 @:structInit
-class IdDefinition {
-	public final required:Bool = false;
-	public final type:ValueType = VString;
-	public final parameter:Int = 0;
-
-	public function validate(value, pos) {
-		return checkType(value, type, pos);
-	}
-}
-
-@:structInit
 class ChildDefinition {
 	public final name:String;
 	public final required:Bool = false;
@@ -305,22 +273,26 @@ class ChildDefinition {
 @:structInit
 class ParameterDefinition {
 	public final pos:Int;
+	public final name:Null<String> = null;
 	public final def:Null<String> = null;
 	public final type:ValueType = VString;
 	public final allowedValues:Array<String> = [];
 	public final meta:Map<String, String> = [];
 
-	public function validate(param:NodeParam):Result<NodeParam, CompileError> {
-		// var child = param.children.find(p -> switch p.type {
-		//   case Text: true;
-		//   default: false;
-		// });
+	public function getMeta(name:String, ?def:String) {
+		return meta.exists(name) ? meta.get(name) : def;
+	}
 
-		var value = param.value != null ? param.value : def;
+	public function validate(param:Node):Result<Node, CompileError> {
+		var child = param.children.find(p -> switch p.type {
+			case Text: true;
+			default: false;
+		});
+		var value = child != null ? child.textContent : def;
 
 		if (allowedValues.length > 0) {
 			if (!allowedValues.contains(value)) {
-				return Error(new CompileError(Fatal, 'Must be one of ${allowedValues.join(', ')}', param.pos));
+				return Error(new CompileError('Must be one of ${allowedValues.join(', ')}', param.pos));
 			}
 		}
 
@@ -337,6 +309,10 @@ class PropertyDefinition {
 	public final allowedValues:Array<String> = [];
 	public final meta:Map<String, String> = [];
 
+	public function getMeta(name:String, ?def:String) {
+		return meta.exists(name) ? meta.get(name) : def;
+	}
+
 	public function validate(prop:Node):Result<Node, CompileError> {
 		var child = prop.children.find(p -> switch p.type {
 			case Text: true;
@@ -346,7 +322,7 @@ class PropertyDefinition {
 
 		if (allowedValues.length > 0) {
 			if (!allowedValues.contains(value)) {
-				return Error(new CompileError(Fatal, 'Must be one of ${allowedValues.join(', ')}', child.pos));
+				return Error(new CompileError('Must be one of ${allowedValues.join(', ')}', child.pos));
 			}
 		}
 
