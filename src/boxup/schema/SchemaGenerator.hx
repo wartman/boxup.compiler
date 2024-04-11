@@ -1,9 +1,8 @@
 package boxup.schema;
 
-import boxup.loader.Loader;
-import haxe.ds.Map;
 import boxup.Builtin;
 import boxup.schema.Schema;
+import haxe.ds.Map;
 
 using Lambda;
 using haxe.io.Path;
