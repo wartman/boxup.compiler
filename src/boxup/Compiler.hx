@@ -27,19 +27,15 @@ class Compiler<T> {
 		var parser = new Parser(tokens);
 
 		return new Future(activate -> {
-			switch parser.parse().flatMap(validator.validate) {
-				case Error(error):
-					reporter.report(error, source);
-					activate(Error(error));
-				case Ok(nodes):
-					generator.generate(source, nodes).handle(result -> {
-						switch result {
-							case Error(error): reporter.report(error, source);
-							default:
-						}
-						activate(result);
-					});
-			}
+			parser.parse().flatMap(validator.validate).inspect(nodes -> {
+				generator.generate(source, nodes).handle(result -> {
+					result.ifExtract(Error(error), reporter.report(error, source));
+					activate(result);
+				});
+			}).inspectError(error -> {
+				reporter.report(error, source);
+				activate(Error(error));
+			});
 		});
 	}
 }

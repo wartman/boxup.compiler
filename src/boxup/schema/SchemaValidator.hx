@@ -11,7 +11,8 @@ class SchemaValidator implements Validator {
 				{name: 'root', required: true, multiple: false},
 				{name: 'schema', required: true, multiple: false},
 				{name: 'group'},
-				{name: 'block'}
+				{name: 'block'},
+				{name: 'paragraph'}
 			]
 		},
 		{
@@ -38,7 +39,7 @@ class SchemaValidator implements Validator {
 		},
 		{
 			name: 'block',
-			parameters: [{pos: 0, type: VString}],
+			parameters: [{name: 'name', pos: 0, type: VString}],
 			properties: [
 				{
 					name: 'type',
@@ -54,7 +55,6 @@ class SchemaValidator implements Validator {
 				}
 			],
 			children: [
-				{name: 'id', multiple: false},
 				{name: 'extend'},
 				{name: 'child'},
 				{name: 'parameter'},
@@ -63,28 +63,13 @@ class SchemaValidator implements Validator {
 			]
 		},
 		{
-			name: 'id',
-			properties: [
-				{name: 'required', type: VBool, required: false},
-				{
-					name: 'type',
-					type: VString,
-					required: false,
-					def: ValueType.VString,
-					allowedValues: [
-						ValueType.VString,
-						ValueType.VAny,
-						ValueType.VInt,
-						ValueType.VFloat,
-						ValueType.VBool
-					]
-				},
-				{name: 'parameter', type: VInt, required: false}
-			]
+			name: 'paragraph',
+			parameters: [{name: 'name', pos: 0, type: VString}],
+			children: [{name: 'extend'}, {name: 'child'}, {name: 'meta'}]
 		},
 		{
 			name: 'child',
-			parameters: [{pos: 0, type: VString}],
+			parameters: [{name: 'name', pos: 0, type: VString}],
 			properties: [
 				{name: 'required', type: VBool, required: false},
 				{
@@ -97,6 +82,7 @@ class SchemaValidator implements Validator {
 		},
 		{
 			name: 'parameter',
+			parameters: [{name: 'name', pos: 0, type: VString}],
 			properties: [
 				{
 					name: 'type',

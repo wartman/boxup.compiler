@@ -11,6 +11,14 @@ class FileSystemLoader implements Loader {
 		this.root = root;
 	}
 
+	public function existsSync(id:String):Bool {
+		return fileExistsSync(id);
+	}
+
+	public function exists(id:String):Future<Bool> {
+		return Future.immediate(fileExistsSync(id));
+	}
+
 	public function loadSync(id:String):Result<Source, CompileError> {
 		return getFileSync(id);
 	}
@@ -19,10 +27,19 @@ class FileSystemLoader implements Loader {
 		return getFileSync(id);
 	}
 
+	function getPath(id:String) {
+		return Path.join([root].concat(id.split('.'))).withExtension('box');
+	}
+
+	function fileExistsSync(id:String):Bool {
+		var path = getPath(id);
+		return path.exists();
+	}
+
 	function getFileSync(id:String):Result<Source, CompileError> {
-		var path = Path.join([root].concat(id.split('.'))).withExtension('box');
+		var path = getPath(id);
 		var content = try path.getContent() catch (e) {
-			return Error(new CompileError(Fatal, 'Source not found: $id', e.message));
+			return Error(new CompileError('Source not found: $id', e.message));
 		}
 		var source:Source = {file: path, content: content};
 		return Ok(source);

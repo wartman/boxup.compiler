@@ -1,5 +1,6 @@
 package boxup;
 
+// @todo: Consider a better way to handle this.
 enum abstract Builtin(String) from String to String {
 	var BRoot = '@root';
 	var BItalic = '@italic';

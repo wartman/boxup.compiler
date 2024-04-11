@@ -1,9 +1,8 @@
 package boxup.schema;
 
-import boxup.loader.Loader;
-import haxe.ds.Map;
 import boxup.Builtin;
 import boxup.schema.Schema;
+import haxe.ds.Map;
 
 using Lambda;
 using haxe.io.Path;
@@ -11,8 +10,8 @@ using haxe.io.Path;
 /**
 	Generates a Schema.
 
-	Note: This is *not* a valid boxup.Generator, as we need to ensure we can
-	use it in contexts (mainly macros) where we can't have things be async.
+	Note: This is *not* a valid boxup.Generator, as we need to use it in
+	sync-only contexts (mainly macros).
 **/
 class SchemaGenerator {
 	static final defaultParagraphChildren:Array<ChildDefinition> = [{name: BItalic}, {name: BBold}, {name: BRaw}];
@@ -20,7 +19,7 @@ class SchemaGenerator {
 	static final defaultBlocks:Array<BlockDefinition> = [
 		{
 			name: Keyword.KUse,
-			parameters: [{pos: 0, type: VString}]
+			parameters: [{name: 'name', pos: 0, type: VString}]
 		},
 		{
 			name: BItalic,
@@ -67,14 +66,8 @@ class SchemaGenerator {
 				});
 			case Block('block', false):
 				var type:BlockDefinitionType = node.getProperty('type', BlockDefinitionType.BNormal);
-				var id = node.children.find(n -> n.type.equals(Block('id', false)));
 				blocks.push({
 					name: node.getParameter(0),
-					id: id != null ? {
-						required: id.getProperty('required', 'false') == 'true',
-						type: id.getProperty('type', ValueType.VString),
-						parameter: Std.parseInt(id.getProperty('parameter', '0'))
-					} : null,
 					type: type,
 					meta: generateMeta(node),
 					parameters: generateParameters(node),
@@ -85,6 +78,13 @@ class SchemaGenerator {
 						default:
 							generateChildren(node, nodes);
 					}
+				});
+			case Block('paragraph', false):
+				blocks.push({
+					name: node.getParameter(0),
+					type: BParagraph,
+					meta: generateMeta(node),
+					children: defaultParagraphChildren.concat(generateChildren(node, nodes))
 				});
 			default:
 		}
@@ -98,6 +98,7 @@ class SchemaGenerator {
 			var allowed = n.children.filter(n -> n.type.equals(Block('option', false)));
 			({
 				pos: pos++,
+				name: n.getParameter(0),
 				type: n.getProperty('type', 'String'),
 				meta: generateMeta(n),
 				allowedValues: allowed.length > 0 ? allowed.map(n -> n.getProperty('value')) : []
@@ -122,8 +123,10 @@ class SchemaGenerator {
 		var meta:Map<String, String> = [];
 		for (n in node.children.filter(n -> n.type.equals(Block('meta', false)))) {
 			var suffix = n.getParameter(0);
-			for (child in n.children.filter(n -> n.type.equals(Property))) {
-				meta.set('${suffix}.${child.id}', child.children[0].textContent);
+			for (child in n.children) switch child.type {
+				case Property(name):
+					meta.set('${suffix}.${name}', child.children[0].textContent);
+				default:
 			}
 		}
 		return meta;
@@ -138,9 +141,10 @@ class SchemaGenerator {
 		var extensions = node.children.filter(n -> n.type.equals(Block('extend', false)));
 		for (reference in extensions) {
 			var name = reference.getParameter(0);
+			var param = reference.children.find(node -> node.type.equals(Parameter(0)));
 			var target = root.find(node -> node.type.equals(Block('group', false)) && node.getParameter(0) == name);
 			if (target == null) {
-				throw new CompileError(Fatal, 'No group exists with the name "$name"', reference.params[0].pos);
+				throw new CompileError('No group exists with the name "$name"', param?.pos);
 			}
 			children = children.concat(generateChildren(target, root));
 		}
@@ -159,7 +163,7 @@ class SchemaGenerator {
 
 	function loadChildSchema(id:String, pos:Position):Result<Array<BlockDefinition>, CompileError> {
 		return loadSource(id).map(schema -> schema.getBlocks()).mapError(_ -> {
-			new CompileError(Fatal, 'Could not load $id', pos);
+			new CompileError('Could not load $id', pos);
 		});
 	}
 }

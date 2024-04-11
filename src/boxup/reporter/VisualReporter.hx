@@ -52,19 +52,10 @@ class VisualReporter implements Reporter {
 		var placeholderWritten = false;
 		var firstLine = line - (textLines.length - 1);
 		var start = 0;
-		var underline = switch e.type {
-			case Warning: '~';
-			case Fatal: '^';
-		}
+		var underline = '^';
 
-		switch e.type {
-			case Fatal:
-				print('');
-				print('ERROR: ${pos.file}:${firstLine} [${pos.min} ${pos.max}]');
-			case Warning:
-				print('');
-				print('WARNING: ${pos.file}:${firstLine} [${pos.min} ${pos.max}]');
-		}
+		print('');
+		print('ERROR: ${pos.file}:${firstLine} [${pos.min} ${pos.max}]');
 		print('');
 
 		for (t in textLines) {
