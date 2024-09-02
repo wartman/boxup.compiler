@@ -7,3 +7,31 @@ All of this is in the content block!
 
   [image src="some/image.jpg"]
   alt = This is also in the content block
+
+  [header]
+  This paragraph belongs to the header block.
+
+  So does this paragraph, because we've indented it to
+  the same level!
+
+    [sub-header]
+    class = foo
+
+    And this is now a child of the header -- note
+    how we can just keep nesting things. 
+
+    [/ Note that if we add another block we close the current one 
+      and keep adding it to the parent at the current indentation level.
+    /]
+    [image src="some/other/image.jpg]
+    alt = This belongs to the header block.
+
+  If we un-indent by one level we're back to being in the header...
+
+...and now we're back to being a child of the content block because we've indented
+out far enough!
+
+  Note that if we indent again we're still a part of
+  the content block, as we haven't introduced a new block
+  context yet. You really should *not* do this, but you 
+  can if you want.

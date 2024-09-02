@@ -10,16 +10,25 @@ function main() {
 class = "main-section"
 styles = "width: 100%;background: blue;"
 
+  [div class="one"]
+    [header]
+      class="section-header" 
+      [h1] Boxup!
+  Boxup is a very simple markup language based
+  around square brackets and indentation.
+
   [header]
   Hey World!
 
-Boxup is a very simple markup language based
-around square brackets and indentation.
-
-It has *bold text*, _italic text_ and you
-can <tag stuff>[a href="some/url"] too.
+    [div class="inner"]
+    It has *bold text*, _italic text_ and you
+    can <tag stuff>[a href="some/url"] too.
+  
+  [div class="two"]
+  It is pretty flexible!
 ';
 
+	// @todo: oops doesn't work
 	var source:Source = {content: content, file: '<test>'};
 	var reporter = new VisualReporter();
 	var tokens = new Scanner(source).scan();
