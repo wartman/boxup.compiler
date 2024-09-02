@@ -18,7 +18,7 @@ class VisualReporter implements Reporter {
 		#end
 	}
 
-	public function report(e:CompileError, source:Source) {
+	public function report(e:BoxupError, source:Source) {
 		var pos = e.pos;
 		var min = pos.min;
 		var max = pos.max;

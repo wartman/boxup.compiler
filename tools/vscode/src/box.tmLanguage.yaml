@@ -1,0 +1,87 @@
+name: boxup
+fileTypes:
+  - box
+scopeName: source.box
+patterns: 
+  - include: '#blocks'
+  - include: '#taggedBlocks'
+  - include: '#comments'
+  - include: '#field' #@todo: need to limit this to the right places 
+
+repository:
+  
+  blocks:
+    name: meta.block.box
+    begin: (\[)([a-zA-Z0-9_\!\@\#\$\%\^\&\*]+)(\/[a-zA-Z0-9_]*)?
+    end: \s*(\])
+    beginCaptures:
+      1: { name: punctuation.definition.block.box }
+      2: { name: entity.other.attribute-name.block.box }
+      3: { name: entity.name.other.box }
+    endCaptures:
+      1: { name: punctuation.definition.block.box }
+    patterns:
+      - { include: '#field' }
+      - { include: '#strings' }
+
+  taggedBlocks:
+    name: meta.block.tagged.box
+    begin: (\<)(.*)(\>)(\[)\s*([a-zA-Z0-9_\!\@\#\$\%\^\&\*]+)
+    end: \s*(\])
+    beginCaptures:
+      1: { name: punctuation.definition.tag.box }
+      2: { name: string.other.tagged.box }
+      3: { name: punctuation.definition.tag.box }
+      4: { name: punctuation.definition.block.box }
+      5: { name: entity.other.attribute-name.block.box }
+    endCaptures:
+      1: { name: punctuation.definition.block.box }
+    patterns:
+      - { include: '#field' }
+      - { include: '#strings' }
+
+  comments:
+    name: comment.line.box
+    begin: (\[\/)
+    end: (\/\])
+    beginCaptures:
+      1: { name: comment.line.box }
+    endCaptures:
+      1: { name: comment.line.box }
+
+  field:
+    name: meta.record.field.box
+    begin: ([a-zA-Z0-9]*)\s*(\=)\s*
+    end: ($|\n|\s*(?=[a-zA-Z0-9]*\s*\=)|\s*(?=\]))
+    beginCaptures:
+      1: { name: entity.name.tag.field.box }
+      2: { name: punctuation.definition.field.box }
+    patterns:
+      - { include: '#strings' }
+      - name: string.other.unquoted.box
+        match: .
+
+  # paragraph:
+  
+  strings:
+    patterns:
+      - name: string.quoted.double.box
+        begin: \"
+        end: \"
+        patterns: 
+          - name: constant.character.escape.box
+            match: \\.
+      - name: string.quoted.single.box
+        begin: \'
+        end: \'
+        patterns: 
+          - name: constant.character.escape.box
+            match: \\.
+      - name: string.quoted.pipe.box
+        begin: \|
+        end: \|
+        patterns: 
+          - name: constant.character.escape.box
+            match: \\.
+  
+  

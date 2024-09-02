@@ -1,0 +1,9 @@
+[post]
+title = First post
+date = 2024/09/02
+
+[content]
+All of this is in the content block!
+
+  [image src="some/image.jpg"]
+  alt = This is also in the content block

@@ -13,7 +13,7 @@ class MacroReporter implements Reporter {
 		});
 	}
 
-	public function report(error:CompileError, source:Source) {
+	public function report(error:BoxupError, source:Source) {
 		if (source.file != realPosition.file) {
 			externalReporter.report(error, source);
 			return;

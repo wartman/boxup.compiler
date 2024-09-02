@@ -1,0 +1,41 @@
+{
+    "name": "boxup",
+    "displayName": "Boxup",
+    "description": "Typed markup for Haxe",
+    "version": "0.1.0",
+    "scripts": {
+        "build": "npx js-yaml src/box.tmLanguage.yaml > syntaxes/box.tmLanguage.json"
+    },
+    "engines": {
+        "vscode": "^1.50.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "contributes": {
+        "languages": [
+            {
+                "id": "box",
+                "aliases": [
+                    "boxup",
+                    "box"
+                ],
+                "extensions": [
+                    "box",
+                    "boxconfig"
+                ],
+                "configuration": "./language-configuration.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "box",
+                "scopeName": "source.box",
+                "path": "./syntaxes/box.tmLanguage.json"
+            }
+        ]
+    },
+    "devDependencies": {
+        "js-yaml": "^3.14.0"
+    }
+}

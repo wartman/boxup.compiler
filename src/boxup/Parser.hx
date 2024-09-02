@@ -12,7 +12,7 @@ class Parser {
 		this.tokens = tokens;
 	}
 
-	public function parse():Result<Array<Node>, CompileError> {
+	public function parse():Result<Node, BoxupError> {
 		position = 0;
 		var nodes:Array<Node> = [];
 
@@ -22,10 +22,18 @@ class Parser {
 			case Error(error): return Error(error);
 		}
 
-		return Ok(nodes);
+		return Ok({
+			type: Root,
+			children: nodes,
+			pos: {
+				min: 0,
+				max: position,
+				file: tokens[0].pos.file
+			}
+		});
 	}
 
-	function parseRoot(indent:Int, isInline:Bool = false):Result<Maybe<Node>, CompileError> {
+	function parseRoot(indent:Int, isInline:Bool = false):Result<Maybe<Node>, BoxupError> {
 		if (isAtEnd()) return Ok(None);
 		if (isInline && isNewline(peek())) return Ok(None);
 		if (match(TokNewline)) return parseRoot(0);
@@ -39,7 +47,7 @@ class Parser {
 		return parseParagraph(indent).map(node -> Some(node));
 	}
 
-	function parseBlock(indent:Int, isTag:Bool = false):Result<Node, CompileError> {
+	function parseBlock(indent:Int, isTag:Bool = false):Result<Node, BoxupError> {
 		ignoreWhitespace();
 
 		var type = identifier();
@@ -48,7 +56,7 @@ class Parser {
 		var paramsAllowed = true;
 
 		if (type == null) {
-			return Error(new CompileError('Expected a block type', peek().pos));
+			return Error(new BoxupError('Expected a block type', peek().pos));
 		}
 
 		ignoreWhitespace();
@@ -78,12 +86,26 @@ class Parser {
 		var childIndent:Int = 0;
 		inline function checkIndent() {
 			var prev:Int = position;
-			if (!isAtEnd() && ((childIndent = findIndent()) > indent)) {
-				return true;
-			} else {
+			function cancel() {
 				position = prev;
 				return false;
 			}
+
+			if (isAtEnd()) return cancel();
+
+			childIndent = findIndent();
+
+			// Child blocks *must* be indented past the block header to be counted as children.
+			if (childIndent > indent && check(TokOpenBracket)) {
+				return true;
+			}
+
+			// All other nodes are children if they are at the same indent as the block header.
+			if (childIndent >= indent && !check(TokOpenBracket)) {
+				return true;
+			}
+
+			return cancel();
 		}
 
 		if (!isTag) {
@@ -114,7 +136,7 @@ class Parser {
 		});
 	}
 
-	function parseTaggedBlock():Result<Node, CompileError> {
+	function parseTaggedBlock():Result<Node, BoxupError> {
 		// Ensures we don't nest tags
 		var tagged = readWhile(() -> !checkAny([TokCloseAngleBracket, TokOpenAngleBracket])).merge();
 
@@ -138,7 +160,7 @@ class Parser {
 		});
 	}
 
-	function parseParagraph(indent:Int):Result<Node, CompileError> {
+	function parseParagraph(indent:Int):Result<Node, BoxupError> {
 		var start = peek();
 		var children:Array<Node> = [];
 
@@ -156,7 +178,7 @@ class Parser {
 		});
 	}
 
-	function parseDecoration(indent:Int, name:Builtin, delimiter:TokenType):Result<Node, CompileError> {
+	function parseDecoration(indent:Int, name:Builtin, delimiter:TokenType):Result<Node, BoxupError> {
 		var start = peek();
 		var children:Array<Node> = [];
 
@@ -179,7 +201,7 @@ class Parser {
 		});
 	}
 
-	function parseText(indent:Int):Result<Node, CompileError> {
+	function parseText(indent:Int):Result<Node, BoxupError> {
 		if (match(TokOpenAngleBracket)) return parseTaggedBlock();
 		if (match(TokUnderline)) return parseDecoration(indent, BItalic, TokUnderline);
 		if (match(TokStar)) return parseDecoration(indent, BBold, TokStar);
@@ -187,7 +209,7 @@ class Parser {
 		return parseTextPart(indent);
 	}
 
-	function parseTextPart(indent:Int):Result<Node, CompileError> {
+	function parseTextPart(indent:Int):Result<Node, BoxupError> {
 		var read = () -> readWhile(() -> !checkAny([TokOpenAngleBracket, TokStar, TokUnderline, TokRaw, TokNewline])).merge();
 		var out = [read()];
 
@@ -231,7 +253,7 @@ class Parser {
 		});
 	}
 
-	function parseParameter(index:Int):Result<Node, CompileError> {
+	function parseParameter(index:Int):Result<Node, BoxupError> {
 		var value = if (checkIdentifier()) {
 			identifier();
 		} else switch parseValue() {
@@ -252,10 +274,10 @@ class Parser {
 		});
 	}
 
-	function parseProperty(value:() -> Result<Maybe<Token>, CompileError>):Result<Node, CompileError> {
+	function parseProperty(value:() -> Result<Maybe<Token>, BoxupError>):Result<Node, BoxupError> {
 		var id = identifier();
 		if (id == null) {
-			return Error(new CompileError('Expected an identifier', peek().pos));
+			return Error(new BoxupError('Expected an identifier', peek().pos));
 		}
 
 		ignoreWhitespace();
@@ -269,7 +291,7 @@ class Parser {
 			case Error(error):
 				Error(error);
 			case Ok(None):
-				Error(new CompileError('Expected a value', peek().pos));
+				Error(new BoxupError('Expected a value', peek().pos));
 			case Ok(Some(value)):
 				Ok({
 					type: Property(id.value),
@@ -285,23 +307,23 @@ class Parser {
 		}
 	}
 
-	function parseInlineValue():Result<Token, CompileError> {
+	function parseInlineValue():Result<Token, BoxupError> {
 		if (match(TokSingleQuote)) return parseString(TokSingleQuote);
 		if (match(TokDoubleQuote)) return parseString(TokDoubleQuote);
 		return Ok(readWhile(checkIdentifier).merge());
 	}
 
-	function parseValue():Result<Token, CompileError> {
+	function parseValue():Result<Token, BoxupError> {
 		if (match(TokSingleQuote)) return parseString(TokSingleQuote);
 		if (match(TokDoubleQuote)) return parseString(TokDoubleQuote);
 		return Ok(readWhile(() -> !isNewline(peek())).merge());
 	}
 
-	function parseString(delimiter:TokenType):Result<Token, CompileError> {
+	function parseString(delimiter:TokenType):Result<Token, BoxupError> {
 		var out = readWhile(() -> !check(delimiter)).merge();
 
 		if (isAtEnd()) {
-			return Error(new CompileError('Unterminated string', out.pos));
+			return Error(new BoxupError('Unterminated string', out.pos));
 		}
 
 		return consume(delimiter).map(_ -> out);
@@ -389,10 +411,6 @@ class Parser {
 		return token.type == TokWhitespace;
 	}
 
-	function isKeyword(token:Token) {
-		return token.value == Keyword.KSchema || token.value == Keyword.KUse;
-	}
-
 	function isDigit(c:String):Bool {
 		return c >= '0' && c <= '9';
 	}
@@ -434,8 +452,8 @@ class Parser {
 		return false;
 	}
 
-	function consume(type:TokenType):Result<Nothing, CompileError> {
-		if (!match(type)) return Error(new CompileError('Expected a ${type}', peek().pos));
+	function consume(type:TokenType):Result<Nothing, BoxupError> {
+		if (!match(type)) return Error(new BoxupError('Expected a ${type}', peek().pos));
 		return Ok(Nothing);
 	}
 

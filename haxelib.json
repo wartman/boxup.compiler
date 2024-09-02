@@ -8,6 +8,6 @@
   },
   "url": "https://github.com/wartman/boxup.compiler.git",
   "license": "MIT",
-  "releasenote": "Simplified some internals",
-  "version": "0.2.0"
+  "releasenote": "Removed schema (at least from the core repo), simplified things and improved syntax",
+  "version": "0.3.0"
 }

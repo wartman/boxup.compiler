@@ -3,6 +3,7 @@ package boxup;
 using Lambda;
 
 enum NodeType {
+	Root;
 	Block(type:String, ?isTag:Bool);
 	Parameter(pos:Int);
 	Property(name:String);
@@ -42,6 +43,7 @@ class Node {
 	public function toJson():Dynamic {
 		return {
 			type: switch type {
+				case Root: 'Root';
 				case Block(type, _): 'Block';
 				case Property(name): 'Property';
 				case Parameter(pos): 'Parameter';
@@ -49,6 +51,7 @@ class Node {
 				case Text: 'Text';
 			},
 			id: switch type {
+				case Root: null;
 				case Block(type, _): type;
 				case Property(name): name;
 				case Parameter(pos): Std.string(pos);

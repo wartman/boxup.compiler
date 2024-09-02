@@ -2,7 +2,7 @@ package boxup;
 
 import haxe.Exception;
 
-class CompileError extends Exception {
+class BoxupError extends Exception {
 	public final pos:Position;
 	public final detailedMessage:Null<String>;
 
