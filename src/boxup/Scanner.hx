@@ -1,6 +1,10 @@
 package boxup;
 
 class Scanner {
+	public static inline function fromSource(source) {
+		return new Scanner(source);
+	}
+
 	final source:Source;
 	var position:Int = 0;
 	var start:Int = 0;

@@ -30,9 +30,9 @@ styles = "width: 100%;background: blue;"
 	// @todo: oops doesn't work
 	var source:Source = {content: content, file: '<test>'};
 	var reporter = new VisualReporter();
-	var tokens = new Scanner(source).scan();
 
-	new Parser(tokens).parse()
+	Parser.fromSource(source)
+		.parse()
 		.flatMap(HtmlDecoder.instance().decode)
 		.inspect(html -> trace(html))
 		.inspectError(error -> reporter.report(error, source));

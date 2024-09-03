@@ -5,6 +5,14 @@ using StringTools;
 using boxup.TokenTools;
 
 class Parser {
+	public static inline function fromSource(source) {
+		return fromTokens(Scanner.fromSource(source).scan());
+	}
+
+	public static inline function fromTokens(tokens:Array<Token>) {
+		return new Parser(tokens);
+	}
+
 	final tokens:Array<Token>;
 	var position:Int = 0;
 
