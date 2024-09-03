@@ -59,6 +59,8 @@ class HtmlDecoder implements Decoder<String> {
 				var children = [];
 
 				for (child in node.children) switch child.type {
+					case Parameter(0):
+						props.push('class="${child.getValue()}"');
 					case Property(name):
 						props.push('$name="${child.getValue()}"');
 					case _ if (accepts(child)):
