@@ -61,6 +61,20 @@ class Node {
 		}
 	}
 
+	public function getBlock(name:String):Null<Node> {
+		return children.find(node -> switch node.type {
+			case Block(type, _) if (name == type): true;
+			default: false;
+		});
+	}
+
+	public function tryBlock(name:String) {
+		return switch getBlock(name) {
+			case null: Error(new BoxupError('Could not find block', 'A child block named $name does not exist', pos));
+			case block: Ok(block);
+		}
+	}
+
 	public function toJson():Dynamic {
 		return {
 			type: switch type {
