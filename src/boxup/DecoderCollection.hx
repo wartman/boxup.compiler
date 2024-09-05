@@ -1,14 +1,19 @@
 package boxup;
 
-abstract DecoderCollection<T>(Array<Decoder<T>>) from Array<Decoder<T>> {
+class DecoderCollection<T> implements Decoder<T> {
+	final decoders:Array<Decoder<T>>;
+
 	public function new(decoders) {
-		this = decoders;
+		this.decoders = decoders;
+	}
+
+	public function accepts(node:Node):Bool {
+		for (decoder in decoders) if (decoder.accepts(node)) return true;
+		return false;
 	}
 
 	public function decode(node:Node):Result<T, BoxupError> {
-		for (decoder in this) {
-			if (decoder.accepts(node)) return decoder.decode(node);
-		}
-		return Error(new BoxupError('Invalid node', 'Could not find an acceptable decoder', node.pos));
+		for (decoder in decoders) if (decoder.accepts(node)) return decoder.decode(node);
+		return Error(new BoxupError('No decoder found', node.pos));
 	}
 }
