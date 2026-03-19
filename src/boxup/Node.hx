@@ -27,10 +27,10 @@ class Node {
 		return def;
 	}
 
-	public function tryProperty(name:String):Result<String, BoxupError> {
+	public function tryProperty(name:String):Either<String, BoxupError> {
 		return switch getProperty(name, null) {
-			case null: Error(new BoxupError('Property not found', 'The property $name does not exist', pos));
-			case value: Ok(value);
+			case null: Right(new BoxupError('Property not found', 'The property $name does not exist', pos));
+			case value: Left(value);
 		}
 	}
 
@@ -43,10 +43,10 @@ class Node {
 		return def;
 	}
 
-	public function tryParameter(position:Int):Result<String, BoxupError> {
+	public function tryParameter(position:Int):Either<String, BoxupError> {
 		return switch getParameter(position, null) {
-			case null: Error(new BoxupError('Parameter not found', 'No parameter at position $position', pos));
-			case value: Ok(value);
+			case null: Right(new BoxupError('Parameter not found', 'No parameter at position $position', pos));
+			case value: Left(value);
 		}
 	}
 
@@ -54,10 +54,10 @@ class Node {
 		return children.find(child -> child.type.equals(Text))?.textContent;
 	}
 
-	public function tryValue():Result<String, BoxupError> {
+	public function tryValue():Either<String, BoxupError> {
 		return switch getValue() {
-			case null: Error(new BoxupError('No value found', pos));
-			case value: Ok(value);
+			case null: Right(new BoxupError('No value found', pos));
+			case value: Left(value);
 		}
 	}
 
@@ -68,10 +68,24 @@ class Node {
 		});
 	}
 
-	public function tryBlock(name:String) {
+	public function tryBlock(name:String):Either<Node, BoxupError> {
 		return switch getBlock(name) {
-			case null: Error(new BoxupError('Could not find block', 'A child block named $name does not exist', pos));
-			case block: Ok(block);
+			case null: Right(new BoxupError('Could not find block', 'A child block named $name does not exist', pos));
+			case block: Left(block);
+		}
+	}
+
+	public function getParagraph():Null<Node> {
+		return children.find(node -> switch node.type {
+			case Paragraph: true;
+			default: false;
+		});
+	}
+
+	public function tryParagraph():Either<Node, BoxupError> {
+		return switch getParagraph() {
+			case null: Right(new BoxupError('No Paragraph found', pos));
+			case node: Left(node);
 		}
 	}
 

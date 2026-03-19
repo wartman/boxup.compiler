@@ -13,9 +13,9 @@ class HtmlParagraphDecoder implements Decoder<String> {
 		return node.type.equals(Paragraph);
 	}
 
-	public function decode(node:Node):Result<String, BoxupError> {
+	public function decode(node:Node):Either<String, BoxupError> {
 		if (!accepts(node)) {
-			return Error(new BoxupError('Invalid node', 'Could not decode node', node.pos));
+			return Right(new BoxupError('Invalid node', 'Could not decode node', node.pos));
 		}
 
 		var out = '';
@@ -24,17 +24,17 @@ class HtmlParagraphDecoder implements Decoder<String> {
 				out += child.textContent;
 			case Paragraph:
 				switch decode(child) {
-					case Ok(value): out += value;
-					case Error(error): return Error(error);
+					case Left(value): out += value;
+					case Right(error): return Right(error);
 				}
 			case Block(_, _) if (HtmlDecoder.instance().accepts(child)):
 				out += switch HtmlDecoder.instance().decode(child) {
-					case Ok(value): value;
-					case Error(error): return Error(error);
+					case Left(value): value;
+					case Right(error): return Right(error);
 				}
 			default:
-				return Error(new BoxupError('Invalid node', 'Could not decode node', child.pos));
+				return Right(new BoxupError('Invalid node', 'Could not decode node', child.pos));
 		}
-		return Ok('<p>' + out + '</p>');
+		return Left('<p>' + out + '</p>');
 	}
 }

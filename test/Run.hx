@@ -31,9 +31,12 @@ styles = "width: 100%;background: blue;"
 	var source:Source = {content: content, file: '<test>'};
 	var reporter = new VisualReporter();
 
-	Parser.fromSource(source)
-		.parse()
-		.flatMap(HtmlDecoder.instance().decode)
-		.inspect(html -> trace(html))
-		.inspectError(error -> reporter.report(error, source));
+	switch Parser.fromSource(source).parse() {
+		case Left(node):
+			switch HtmlDecoder.instance().decode(node) {
+				case Left(str): trace(str);
+				case Right(error): reporter.report(error, source);
+			}
+		case Right(error): reporter.report(error, source);
+	}
 }

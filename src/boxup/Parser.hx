@@ -20,17 +20,17 @@ class Parser {
 		this.tokens = tokens;
 	}
 
-	public function parse():Result<Node, BoxupError> {
+	public function parse():Either<Node, BoxupError> {
 		position = 0;
 		var nodes:Array<Node> = [];
 
 		while (!isAtEnd()) switch parseRoot(0) {
-			case Ok(None):
-			case Ok(Some(node)): nodes.push(node);
-			case Error(error): return Error(error);
+			case Left(None):
+			case Left(Some(node)): nodes.push(node);
+			case Right(error): return Right(error);
 		}
 
-		return Ok({
+		return Left({
 			type: Root,
 			children: nodes,
 			pos: {
@@ -41,21 +41,21 @@ class Parser {
 		});
 	}
 
-	function parseRoot(indent:Int, isInline:Bool = false):Result<Maybe<Node>, BoxupError> {
-		if (isAtEnd()) return Ok(None);
-		if (isInline && isNewline(peek())) return Ok(None);
+	function parseRoot(indent:Int, isInline:Bool = false):Either<Option<Node>, BoxupError> {
+		if (isAtEnd()) return Left(None);
+		if (isInline && isNewline(peek())) return Left(None);
 		if (match(TokNewline)) return parseRoot(0);
 		if (match(TokWhitespace)) return parseRoot(indent + 1);
 		if (match(TokCommentStart)) {
 			ignoreComment();
 			return parseRoot(indent, isInline);
 		}
-		if (match(TokOpenBracket)) return parseBlock(indent).map(node -> Some(node));
-		if (checkProperty()) return parseProperty(() -> parseValue().map(v -> Some(v))).map(node -> Some(node));
-		return parseParagraph(indent).map(node -> Some(node));
+		if (match(TokOpenBracket)) return parseBlock(indent).mapLeft(node -> Some(node));
+		if (checkProperty()) return parseProperty(() -> parseValue().mapLeft(v -> Some(v))).mapLeft(node -> Some(node));
+		return parseParagraph(indent).mapLeft(node -> Some(node));
 	}
 
-	function parseBlock(indent:Int, isTag:Bool = false):Result<Node, BoxupError> {
+	function parseBlock(indent:Int, isTag:Bool = false):Either<Node, BoxupError> {
 		ignoreWhitespace();
 
 		var type = identifier();
@@ -64,7 +64,7 @@ class Parser {
 		var paramsAllowed = true;
 
 		if (type == null) {
-			return Error(new BoxupError('Expected a block type', peek().pos));
+			return Right(new BoxupError('Expected a block type', peek().pos));
 		}
 
 		ignoreWhitespace();
@@ -73,22 +73,22 @@ class Parser {
 			ignoreWhitespaceAndNewline();
 			if (!checkProperty() && paramsAllowed) {
 				switch parseParameter(paramsIndex++) {
-					case Ok(value): children.push(value);
-					case Error(error): return Error(error);
+					case Left(value): children.push(value);
+					case Right(error): return Right(error);
 				}
 			} else {
 				paramsAllowed = false;
-				switch parseProperty(() -> parseInlineValue().map(v -> Some(v))) {
-					case Ok(value): children.push(value);
-					case Error(error): return Error(error);
+				switch parseProperty(() -> parseInlineValue().mapLeft(v -> Some(v))) {
+					case Left(value): children.push(value);
+					case Right(error): return Right(error);
 				}
 			}
 			ignoreWhitespaceAndNewline();
 		}
 
 		switch consume(TokCloseBracket) {
-			case Ok(_):
-			case Error(error): return Error(error);
+			case Left(_):
+			case Right(error): return Right(error);
 		}
 
 		var childIndent:Int = 0;
@@ -120,45 +120,45 @@ class Parser {
 			ignoreWhitespace();
 			if (!isNewline(peek())) {
 				switch parseRoot(indent, true) {
-					case Error(e):
-						return Error(e);
-					case Ok(None):
-					case Ok(Some(child)):
+					case Right(e):
+						return Right(e);
+					case Left(None):
+					case Left(Some(child)):
 						children.push(child); // Allow children to follow on the same line
 				}
 			} else {
 				while (checkIndent()) switch parseRoot(childIndent) {
-					case Error(e):
-						return Error(e);
-					case Ok(None):
-					case Ok(Some(child)):
+					case Right(e):
+						return Right(e);
+					case Left(None):
+					case Left(Some(child)):
 						children.push(child);
 				};
 			}
 		}
 
-		return Ok({
+		return Left({
 			type: Block(type.value, isTag),
 			children: children,
 			pos: type.pos
 		});
 	}
 
-	function parseTaggedBlock():Result<Node, BoxupError> {
+	function parseTaggedBlock():Either<Node, BoxupError> {
 		// Ensures we don't nest tags
 		var tagged = readWhile(() -> !checkAny([TokCloseAngleBracket, TokOpenAngleBracket])).merge();
 
 		switch consume(TokCloseAngleBracket) {
-			case Ok(_):
-			case Error(error): return Error(error);
+			case Left(_):
+			case Right(error): return Right(error);
 		}
 
 		switch consume(TokOpenBracket) {
-			case Ok(_):
-			case Error(error): return Error(error);
+			case Left(_):
+			case Right(error): return Right(error);
 		}
 
-		return parseBlock(0, true).map(node -> {
+		return parseBlock(0, true).mapLeft(node -> {
 			node.children.push({
 				type: Text,
 				textContent: tagged.value,
@@ -168,48 +168,48 @@ class Parser {
 		});
 	}
 
-	function parseParagraph(indent:Int):Result<Node, BoxupError> {
+	function parseParagraph(indent:Int):Either<Node, BoxupError> {
 		var start = peek();
 		var children:Array<Node> = [];
 
 		do {
 			switch parseText(indent) {
-				case Ok(value): children.push(value);
-				case Error(error): return Error(error);
+				case Left(value): children.push(value);
+				case Right(error): return Right(error);
 			}
 		} while (!isAtEnd() && !isNewline(peek()));
 
-		return Ok({
+		return Left({
 			type: Paragraph,
 			children: children.filter(c -> c != null),
 			pos: start.getMergedPos(previous())
 		});
 	}
 
-	function parseDecoration(indent:Int, name:Builtin, delimiter:TokenType):Result<Node, BoxupError> {
+	function parseDecoration(indent:Int, name:Builtin, delimiter:TokenType):Either<Node, BoxupError> {
 		var start = peek();
 		var children:Array<Node> = [];
 
 		while (!check(delimiter) && !isAtEnd() && !isNewline(peek())) {
 			switch parseText(indent) {
-				case Ok(child): children.push(child);
-				case Error(e): return Error(e);
+				case Left(child): children.push(child);
+				case Right(e): return Right(e);
 			}
 		}
 
 		switch consume(delimiter) {
-			case Ok(_):
-			case Error(error): return Error(error);
+			case Left(_):
+			case Right(error): return Right(error);
 		}
 
-		return Ok({
+		return Left({
 			type: Block(name, false),
 			children: children,
 			pos: start.getMergedPos(previous())
 		});
 	}
 
-	function parseText(indent:Int):Result<Node, BoxupError> {
+	function parseText(indent:Int):Either<Node, BoxupError> {
 		if (match(TokOpenAngleBracket)) return parseTaggedBlock();
 		if (match(TokUnderline)) return parseDecoration(indent, BItalic, TokUnderline);
 		if (match(TokStar)) return parseDecoration(indent, BBold, TokStar);
@@ -217,7 +217,7 @@ class Parser {
 		return parseTextPart(indent);
 	}
 
-	function parseTextPart(indent:Int):Result<Node, BoxupError> {
+	function parseTextPart(indent:Int):Either<Node, BoxupError> {
 		var read = () -> readWhile(() -> !checkAny([TokOpenAngleBracket, TokStar, TokUnderline, TokRaw, TokNewline])).merge();
 		var out = [read()];
 
@@ -254,22 +254,22 @@ class Parser {
 
 		var tok = out.merge();
 
-		return Ok({
+		return Left({
 			type: Text,
 			textContent: tok.value,
 			pos: tok.pos
 		});
 	}
 
-	function parseParameter(index:Int):Result<Node, BoxupError> {
+	function parseParameter(index:Int):Either<Node, BoxupError> {
 		var value = if (checkIdentifier()) {
 			identifier();
 		} else switch parseValue() {
-			case Ok(value): value;
-			case Error(e): return Error(e);
+			case Left(value): value;
+			case Right(e): return Right(e);
 		}
 
-		return Ok({
+		return Left({
 			type: Parameter(index),
 			pos: value.pos,
 			children: [
@@ -282,26 +282,26 @@ class Parser {
 		});
 	}
 
-	function parseProperty(value:() -> Result<Maybe<Token>, BoxupError>):Result<Node, BoxupError> {
+	function parseProperty(value:() -> Either<Option<Token>, BoxupError>):Either<Node, BoxupError> {
 		var id = identifier();
 		if (id == null) {
-			return Error(new BoxupError('Expected an identifier', peek().pos));
+			return Right(new BoxupError('Expected an identifier', peek().pos));
 		}
 
 		ignoreWhitespace();
 		switch consume(TokEquals) {
-			case Ok(_):
-			case Error(error): return Error(error);
+			case Left(_):
+			case Right(error): return Right(error);
 		}
 		ignoreWhitespace();
 
 		return switch value() {
-			case Error(error):
-				Error(error);
-			case Ok(None):
-				Error(new BoxupError('Expected a value', peek().pos));
-			case Ok(Some(value)):
-				Ok({
+			case Right(error):
+				Right(error);
+			case Left(None):
+				Right(new BoxupError('Expected a value', peek().pos));
+			case Left(Some(value)):
+				Left({
 					type: Property(id.value),
 					pos: id.pos,
 					children: [
@@ -315,26 +315,26 @@ class Parser {
 		}
 	}
 
-	function parseInlineValue():Result<Token, BoxupError> {
+	function parseInlineValue():Either<Token, BoxupError> {
 		if (match(TokSingleQuote)) return parseString(TokSingleQuote);
 		if (match(TokDoubleQuote)) return parseString(TokDoubleQuote);
-		return Ok(readWhile(checkIdentifier).merge());
+		return Left(readWhile(checkIdentifier).merge());
 	}
 
-	function parseValue():Result<Token, BoxupError> {
+	function parseValue():Either<Token, BoxupError> {
 		if (match(TokSingleQuote)) return parseString(TokSingleQuote);
 		if (match(TokDoubleQuote)) return parseString(TokDoubleQuote);
-		return Ok(readWhile(() -> !isNewline(peek())).merge());
+		return Left(readWhile(() -> !isNewline(peek())).merge());
 	}
 
-	function parseString(delimiter:TokenType):Result<Token, BoxupError> {
+	function parseString(delimiter:TokenType):Either<Token, BoxupError> {
 		var out = readWhile(() -> !check(delimiter)).merge();
 
 		if (isAtEnd()) {
-			return Error(new BoxupError('Unterminated string', out.pos));
+			return Right(new BoxupError('Unterminated string', out.pos));
 		}
 
-		return consume(delimiter).map(_ -> out);
+		return consume(delimiter).mapLeft(_ -> out);
 	}
 
 	function identifier():Token {
@@ -460,9 +460,9 @@ class Parser {
 		return false;
 	}
 
-	function consume(type:TokenType):Result<Nothing, BoxupError> {
-		if (!match(type)) return Error(new BoxupError('Expected a ${type}', peek().pos));
-		return Ok(Nothing);
+	function consume(type:TokenType):Either<TokenType, BoxupError> {
+		if (!match(type)) return Right(new BoxupError('Expected a ${type}', peek().pos));
+		return Left(type);
 	}
 
 	inline function check(type:TokenType) {

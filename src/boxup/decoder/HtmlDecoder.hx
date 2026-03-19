@@ -20,17 +20,17 @@ class HtmlDecoder implements Decoder<String> {
 		}
 	}
 
-	public function decode(node:Node):Result<String, BoxupError> {
+	public function decode(node:Node):Either<String, BoxupError> {
 		return switch node.type {
 			case Root:
 				var out = [];
 				for (child in node.children) if (accepts(child)) switch decode(child) {
-					case Ok(value): out.push(value);
-					case Error(error): return Error(error);
-				} else return Error(new BoxupError('Invalid node', 'Could not decode node', child.pos));
-				Ok(out.join(''));
+					case Left(value): out.push(value);
+					case Right(error): return Right(error);
+				} else return Right(new BoxupError('Invalid node', 'Could not decode node', child.pos));
+				Left(out.join(''));
 			case Text:
-				Ok(node.textContent);
+				Left(node.textContent);
 			case Paragraph:
 				HtmlParagraphDecoder.instance().decode(node);
 			case Block(Builtin.BBold, _):
@@ -65,17 +65,17 @@ class HtmlDecoder implements Decoder<String> {
 						props.push('$name="${child.getValue()}"');
 					case _ if (accepts(child)):
 						switch decode(child) {
-							case Ok(html): children.push(html);
-							case Error(error): return Error(error);
+							case Left(html): children.push(html);
+							case Right(error): return Right(error);
 						}
 					default:
-						return Error(new BoxupError('Invalid node', 'Could not decode node', child.pos));
+						return Right(new BoxupError('Invalid node', 'Could not decode node', child.pos));
 				}
 
 				var open = props.length > 0 ? '<$type ${props.join(' ')}>' : '<$type>';
-				Ok('$open${children.join('')}</$type>');
+				Left('$open${children.join('')}</$type>');
 			default:
-				return Error(new BoxupError('Invalid node', 'Could not decode node', node.pos));
+				return Right(new BoxupError('Invalid node', 'Could not decode node', node.pos));
 		}
 	}
 }

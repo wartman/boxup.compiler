@@ -12,8 +12,8 @@ class DecoderCollection<T> implements Decoder<T> {
 		return false;
 	}
 
-	public function decode(node:Node):Result<T, BoxupError> {
+	public function decode(node:Node):Either<T, BoxupError> {
 		for (decoder in decoders) if (decoder.accepts(node)) return decoder.decode(node);
-		return Error(new BoxupError('No decoder found', node.pos));
+		return Right(new BoxupError('No decoder found', node.pos));
 	}
 }
